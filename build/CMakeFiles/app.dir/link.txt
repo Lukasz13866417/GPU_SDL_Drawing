@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/app.dir/main.cpp.o CMakeFiles/app.dir/src/rendering2.cpp.o CMakeFiles/app.dir/src/util.cpp.o -o app  /usr/lib/libOpenCL.so /usr/lib/x86_64-linux-gnu/libSDL2.so 

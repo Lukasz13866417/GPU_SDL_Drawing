@@ -136,7 +136,7 @@ class _DepthBuffer {
 
             cl::Program::Sources sources;
            
-            std::string sourceCode = getCode("./cl_scripts/main/script3.cl");
+            std::string sourceCode = getCode("../src/cl_scripts/script.cl");
             sources.push_back({sourceCode.c_str(), sourceCode.length()});
 
             cl::Program program(getGPU().getContext(), sources);
