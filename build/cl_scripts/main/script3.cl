@@ -1,28 +1,62 @@
 typedef float3 vec3;
 
+                    // output buffers
 __kernel void draw(__global float* depthBuffer,__global int* colorArray,
-                   float z1, float z2, float z3, int clr,
-                   int screen_width, int screen_height, int minX, int minY,  float dx1, float dx2, float dy1, float dy2, float lambda1, float lambda2) {
+                    // inverse z coords of triangle verts,   triangle color
+                   float z1, float z2, float z3,               int clr,
+                   int screen_width, int screen_height, 
+                   // top left corner of triangle projection's bbox
+                   int minX, int minY,  
+                   // preprocessed values for math calculations. Further explained below.
+                   float dx1, float dx2, float dy1, 
+                   float dy2, float lambda1, float lambda2) {
 
-    // do all the computations for a 2x2px tile.
-    //float inv=1.0f/(v1.x*v2.y - v1.x*v3.y - v1.y*v2.x + v1.y*v3.x + v2.x*v3.y - v2.y*v3.x);
-    int x = 2*(get_global_id(0))+minX; // minX,minY - top left of triangle bounding box
+    // coords of current pixel
+    int x = 2*(get_global_id(0))+minX; 
     int y = 2*(get_global_id(1))+minY; 
 
-    //float lambda1 = (-v1.x*v3.y + v1.x*y + v1.y*v3.x - v1.y*x - v3.x*y + v3.y*x)*inv;
-    //float lambda2 = (v1.x*v2.y - v1.x*y - v1.y*v2.x + v1.y*x + v2.x*y - v2.y*x)*inv;
+    // Preprocessed denominator in many expressions in the code:
+    //   inv = 1/(v1.x*v2.y - v1.x*v3.y - v1.y*v2.x + v1.y*v3.x + v2.x*v3.y - v2.y*v3.x)
+
+    // Barycentric coordinates of point (x,y) relative to triangle's projection (v1,2,3): 
+    //   lambda1 = (-v1.x*v3.y + v1.x*y + v1.y*v3.x - v1.y*x - v3.x*y + v3.y*x)*inv
+    //   lambda2 = (v1.x*v2.y - v1.x*y - v1.y*v2.x + v1.y*x + v2.x*y - v2.y*x)*inv
+
+    // Not all parts of these expressions depend on x,y.
+
+    // Lambda1,2 are "common part" of these coords throughout all (x,y) coords.
+    // I took formulas from lines 22,23 but threw away terms containing x and y.
+    // Thats because we can preprocess that, and take x,y into consideration here.
+    // These values are also the barycentric coords of (0,0)
+    // These coords increase by dx (dy) value when x (y) increases by 1.
+    //  for lambda1:
+    //   dx1 = (v3.y - v1.y)*inv, dx2 = (v1.y - v2.y)*inv
+    //   dy is similar
+    //  for lambda2, it's dx2, dy2.
+    
+    // To get coords of (x,y):
     lambda1 += x*dx1 + y*dy1;
     lambda2 += x*dx2 + y*dy2;
-    //float dx1 = (v3.y - v1.y)*inv, dx2 = (v1.y - v2.y)*inv; // barycentric coordinates of a point increase by this value when x increases by 1.
+
+    // index of pixel in color buffer / z buffer
     int index = (y + (screen_height / 2)) * screen_width + (x + (screen_width / 2));
-    float f;
-    if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){ // test if pixel is inside triangle's projection
+    float f; // distance from camera to point on original triangle, 
+             // that corresponds to this pixel (if this px lies in triangle projection)
+    // (camera is at (0,0,0)
+    // test if pixel is inside triangle's projection 
+    if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){ 
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
-        if (f > depthBuffer[index]) {
+        // Test if point on 3D triangle, corresponding to this pixel inside projection, 
+        // is closer to cam than last candidate
+        if (f > depthBuffer[index]) { 
             depthBuffer[index] = f;
             colorArray[index] = clr;
         }
     }
+
+    // Repeat for every pixel in 2x2px tile
+    // Instead of recalculating the bar. coords, distance etc,
+    // update values for current pixel, based on same values for previous pixel
     
     ++index;
     lambda1 += dx1;
@@ -36,7 +70,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     }
 
     index+=screen_width;
-    lambda1 += dy1; // same as dx1,dx2 but for changing y.
+    lambda1 += dy1; 
     lambda2 += dy2;
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;

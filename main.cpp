@@ -91,7 +91,7 @@ int main(){
     const int frameDelay = 1000 / FPS; // Target frame time in milliseconds
     Uint32 frameStart;
     int frameTime;
-    float rotSpeed=0.005f;
+    float rotSpeed=0.0175f;
     while (!quit) {
         frameStart = SDL_GetTicks();
         while (SDL_PollEvent(&e) != 0) {
@@ -108,21 +108,9 @@ int main(){
         //O=rotX(O,3.141f/250);
         //O -= {0,0,2};
 
-
-        /*
-        vec V1 = O+vec{-200, -200, -200};
-        vec V2 = O+vec{200, -200, -200};
-        vec V3 = O+vec{200, 200, -200};
-        vec V4 = O+vec{-200, 200, -200};
-        vec V5 = O+vec{-200, -200, 200};
-        vec V6 = O+vec{200, -200, 200};
-        vec V7 = O+vec{200, 200, 200};
-        vec V8 = O+vec{-200, 200, 200};Objecr
-        */
-
         // Draw triangles for each face
 
-        for(int i=-4;i<4;++i){
+        for(int i=-5;i<6;++i){
 
             // Front face
                 depthBuffer.drawTriangle(V3+O + vec{150,0,0}*i, V2+O + vec{150,0,0}*i, V1+O + vec{150,0,0}*i, frontColor);
@@ -162,7 +150,7 @@ int main(){
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }else{
-           // std::cerr<<"OUCH"<<std::endl;
+            std::cerr<<"OUCH"<<std::endl;
         }
     }
     //std::cout<<countedFrames;
