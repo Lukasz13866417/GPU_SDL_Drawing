@@ -1,5 +1,8 @@
 # Basic Hardware Renderer
 Can draw 3D colored triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute Z-buffer values. 
+There's a demo in ```main.cpp```. You can walk around a scene with rotating 3D towers.
+![image](https://github.com/user-attachments/assets/facabfe3-f67e-4228-8c19-6ff5d7ba09a7)
+
 ## Build & Run
 You must first install SDL and OpenCL on your system. On Debian-style systems, this worked for me:
 ```bash
