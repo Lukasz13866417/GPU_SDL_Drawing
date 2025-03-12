@@ -1,5 +1,5 @@
 # Basic Hardware Renderer
-Can draw 3D colored triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute Z-buffer values. 
+Mostly proof of concept Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute Z-buffer values. 
 There's a demo in ```main.cpp```. You can walk around a scene with rotating 3D towers.
 ![image](https://github.com/user-attachments/assets/facabfe3-f67e-4228-8c19-6ff5d7ba09a7)
 
