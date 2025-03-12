@@ -48,7 +48,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
         // Test if point on 3D triangle, corresponding to this pixel inside projection, 
         // is closer to cam than last candidate
-        if (f > depthBuffer[index]) { 
+        if (f > 0 && f > depthBuffer[index]) { 
             depthBuffer[index] = f;
             colorArray[index] = clr;
         }
@@ -63,7 +63,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     lambda2 += dx2;
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
-        if (f > depthBuffer[index]) {
+        if (f > 0 && f > depthBuffer[index]) {
             depthBuffer[index] = f;
             colorArray[index] = clr;
         }
@@ -74,7 +74,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     lambda2 += dy2;
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
-        if (f > depthBuffer[index]) {
+        if (f > 0 && f > depthBuffer[index]) {
             depthBuffer[index] = f;
             colorArray[index] = clr;
         }
@@ -85,7 +85,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     lambda2 -= dx2;
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
-        if (f > depthBuffer[index]) {
+        if (f > 0 && f > depthBuffer[index]) {
             depthBuffer[index] = f;
             colorArray[index] = clr;
         }

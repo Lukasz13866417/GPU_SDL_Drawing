@@ -285,8 +285,8 @@ int main(){
         return -1;
     }
 
-    int screenWidth = 1920;
-    int screenHeight = 1080;
+    int screenWidth = 1600;
+    int screenHeight = 1000;
 
     SDL_Window* window = SDL_CreateWindow("SDL Tower (Hex Pyramid + Prism + Cuboid)",
                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
