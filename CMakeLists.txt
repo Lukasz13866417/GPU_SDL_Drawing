@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.10)
+project(GPU_SDL_Drawing LANGUAGES CXX)
+
+find_package(OpenCL REQUIRED)
+find_package(SDL2 REQUIRED)
+
+add_executable(app
+    main.cpp
+    src/rendering2.cpp
+    src/util.cpp
+)
+
+target_include_directories(app PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_include_directories(app PRIVATE ${OpenCL_INCLUDE_DIRS})
+target_link_libraries(app PRIVATE ${OpenCL_LIBRARIES})
+target_include_directories(app PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(app PRIVATE ${SDL2_LIBRARIES})

@@ -1,0 +1,3 @@
+/home/lukasz/Desktop/GPU_SDL_Drawing/build/CMakeFiles/app.dir
+/home/lukasz/Desktop/GPU_SDL_Drawing/build/CMakeFiles/edit_cache.dir
+/home/lukasz/Desktop/GPU_SDL_Drawing/build/CMakeFiles/rebuild_cache.dir

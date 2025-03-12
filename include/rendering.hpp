@@ -1,0 +1,41 @@
+#ifndef GPU_HPP
+#define GPU_HPP
+#include <iostream>
+#include "../include/util.hpp"
+#include <CL/opencl.hpp>
+#include <SDL2/SDL.h>
+
+class _GPU;
+
+class GPU{
+    private:
+        _GPU* pimpl;
+    public:
+        GPU();
+        ~GPU();
+        bool isInitialized();
+        cl::Device& getDevice();
+        cl::Platform& getPlatform();
+        cl::CommandQueue& getQueue();
+        cl::Context& getContext();
+
+};
+
+
+void initGPU();
+GPU& getGPU();
+void deleteGPU();
+
+class _DepthBuffer;
+
+class DepthBuffer{
+    private:
+    _DepthBuffer* pimpl;       
+    public:
+        DepthBuffer(int scr_s, int scr_h, int scr_z);
+        ~DepthBuffer();
+        Uint32 *finishFrame();
+        void drawTriangle(vec a, vec b, vec c, int clr);
+};
+
+#endif // GPU_HPP
