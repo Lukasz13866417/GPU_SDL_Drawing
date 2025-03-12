@@ -13,4 +13,8 @@ mkdir build && cd build
 cmake ..
 make
 ```
-To run, run ```./app``` in the ```build``` dir.
+To run, 
+```bash
+cd build
+./app
+```
