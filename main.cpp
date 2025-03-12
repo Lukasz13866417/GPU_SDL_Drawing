@@ -91,7 +91,7 @@ int main(){
     const int frameDelay = 1000 / FPS; // Target frame time in milliseconds
     Uint32 frameStart;
     int frameTime;
-    float rotSpeed=0.005f;
+    float rotSpeed=0.0175f;
     while (!quit) {
         frameStart = SDL_GetTicks();
         while (SDL_PollEvent(&e) != 0) {
