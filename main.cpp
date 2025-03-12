@@ -1,3 +1,5 @@
+// Just a demo. 
+// The important stuff is in include/ and src/ 
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
@@ -6,9 +8,9 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
-#include <cmath>      // for sin/cos
-#include "../include/rendering.hpp"  // your DepthBuffer, etc.
-#include "../include/util.hpp"       // your vec struct, rotY, etc.
+#include <cmath>      
+#include "../include/rendering.hpp"  
+#include "../include/util.hpp"       
 
 int makeColorDarker(int baseColor) {
     int r = (baseColor >> 16) & 0xFF;
