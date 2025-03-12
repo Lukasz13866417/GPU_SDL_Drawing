@@ -42,6 +42,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     int index = (y + (screen_height / 2)) * screen_width + (x + (screen_width / 2));
     float f; // distance from camera to point on original triangle, 
              // that corresponds to this pixel (if this px lies in triangle projection)
+             // Actually, it's the inverse of that distance.
     // (camera is at (0,0,0)
     // test if pixel is inside triangle's projection 
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){ 

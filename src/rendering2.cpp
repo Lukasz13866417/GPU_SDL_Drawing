@@ -163,18 +163,10 @@ class _DepthBuffer {
             float x2 = b->x, y2 = -b->y, z2 = b->z;
             float x3 = c->x, y3 = -c->y, z3 = c->z;
 
-            if(z1 < 0 || z2 < 0 || z3 < 0){
+            if(z1 < 10 && z2 < 10 && z3 < 10){
                 return;
             }
-            if(abs(z1)<1e-12){
-                z1 += 2*1e-12;
-            }
-            if(abs(z2)<1e-12){
-                z2 += 2*1e-12;
-            }
-            if(abs(z3)<1e-12){
-                z3 += 2*1e-12;
-            }
+            
         
             x1 *= (float)(scr_z) / z1; x2 *= (float)(scr_z) / z2; x3 *= (float)(scr_z) / z3;
             y1 *= (float)(scr_z) / z1; y2 *= (float)(scr_z) / z2; y3 *= (float)(scr_z) / z3; 
@@ -192,10 +184,11 @@ class _DepthBuffer {
 
             assert(drawingKernel->setArg(5, clr)==CL_SUCCESS); 
             int boxLeft = std::min({x1,x2,x3}), boxRight = std::max({x1,x2,x3}), boxTop = std::min({y1,y2,y3}), boxBottom = std::max({y1,y2,y3});
+            boxLeft = std::max(boxLeft,(-maxx/2) + 1);
+            boxRight = std::min(boxRight,(maxx/2) - 3);
+            boxTop = std::max(boxTop,(-maxy/2) + 1);
+            boxBottom = std::min(boxBottom,(maxy/2) - 3);
             if(boxLeft>=boxRight || boxTop>=boxBottom){
-                return;
-            }
-            if(boxLeft < -maxx/2 || boxRight >= maxx/2 || boxTop < -maxy/2 || boxBottom >= maxy/2){
                 return;
             }
            
