@@ -24,10 +24,10 @@ To run, just navigate to ```build``` directory and run:
 ## Overview
 The library is in ```src\``` and ```include\```. Rendering a colored 3D triangle onto a bitmap is the main feature it provides. The ```util``` file has some basic CPU-side math functions, color utilities and the only math objects in this renderer: ```tri``` and ```vec``` - 3D triangle and 3D vector. <br><br>
 The ```rendering``` file:
-    - Has a class ```GPU``` that abstracts away the whole OpenCL setup, like creating a context, platform and finding the GPU. 
-    - Most importantly, there's the  -```DepthBuffer``` that has a bitmap that stores the color of every pixel on the screen, as well as a depth buffer. 
-    - All of 3D rendering in this project is done with DepthBuffer's ```drawTriangle()``` method. 
-    - To fetch results after you're done with 3D rendering in a given frame, you simply call ```finishFrame()```. This method returns the color bitmap for this frame. You can draw it onto the screen with libs like SDL (used here). 
-    - You can also ```clear``` the buffer (e.g. at the beginning of 3D rendering in a given frame).
+- Has a class ```GPU``` that abstracts away the whole OpenCL setup, like creating a context, platform and finding the GPU. 
+- Most importantly, there's the  -```DepthBuffer``` that has a bitmap that stores the color of every pixel on the screen, as well as a depth buffer. 
+- All of 3D rendering in this project is done with DepthBuffer's ```drawTriangle()``` method. 
+- To fetch results after you're done with 3D rendering in a given frame, you simply call ```finishFrame()```. This method returns the color bitmap for this frame. You can draw it onto the screen with libs like SDL (used here). 
+- You can also ```clear``` the buffer (e.g. at the beginning of 3D rendering in a given frame).
 ## My idea
 My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
