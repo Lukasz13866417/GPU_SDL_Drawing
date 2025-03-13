@@ -16,7 +16,7 @@ mkdir build && cd build
 cmake ..
 make
 ```
-To run navigate to ```build``` directory and run:
+To run, just navigate to ```build``` directory and run:
 ```bash
 ./app
 ```
