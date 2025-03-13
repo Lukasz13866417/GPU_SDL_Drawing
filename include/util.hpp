@@ -71,4 +71,6 @@ struct tri{
 
 float pointPlaneDist(vec P, vec A, vec B, vec C);
 
+vec triangleNormal(const vec &A, const vec &B, const vec &C) ;
+
 #endif // UTIL_HPP

@@ -150,7 +150,7 @@ class _DepthBuffer {
         }    
 
         void _drawTriangle(vec *a, vec *b, vec *c, int clr){
-            if(pointPlaneDist(vec{0,0,0},*a,*b,*c) <= 0){
+            if(triangleNormal(*a,*b,*c).z > 1){
                 return;
             }
             if(isFirstDraw){

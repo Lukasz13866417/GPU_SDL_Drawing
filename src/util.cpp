@@ -57,6 +57,14 @@ float vec::dot(const vec& rhs) const {
     return x * rhs.x + y * rhs.y + z * rhs.z;
 }
 
+vec vec::cross(const vec& rhs) const {
+    return vec(
+        y * rhs.z - z * rhs.y,
+        z * rhs.x - x * rhs.z,
+        x * rhs.y - y * rhs.x
+    );
+}
+
 vec operator^(const vec& v1, const vec& v2) {
     return {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
 }
@@ -138,7 +146,6 @@ std::ostream& operator<<(std::ostream& os, const vec& v) {
     return os;
 }
 
-// RGB color conversion functions
 int fromRgb(int r, int g, int b) {
     return (r << 16) | (g << 8) | b;
 }
@@ -235,4 +242,10 @@ float pointPlaneDist(vec A, vec B, vec C, vec P) {
     normal = normal/normal.length(); 
     vec AP = P - A; 
     return (AP * normal); 
+}
+
+vec triangleNormal(const vec &A, const vec &B, const vec &C) {
+    vec edge1 = B - A;
+    vec edge2 = C - A;
+    return edge1.cross(edge2).normalized();
 }

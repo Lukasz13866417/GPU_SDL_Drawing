@@ -5,13 +5,15 @@ find_package(OpenCL REQUIRED)
 find_package(SDL2 REQUIRED)
 
 add_executable(app
-    main.cpp
+    demo/main.cpp
+    demo/shapes/shape3d.cpp
     src/rendering2.cpp
     src/util.cpp
 )
 
 target_include_directories(app PRIVATE 
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/demo/shapes"
 )
 
 target_include_directories(app PRIVATE ${OpenCL_INCLUDE_DIRS})
