@@ -2,7 +2,8 @@
 Proof of concept. Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute depth buffer values. \
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with ```main.cpp``` and some helper files. You can walk around a scene with randomly spawned 3D towers.
-![image](https://github.com/user-attachments/assets/35dde0e4-a13f-437c-a290-200cabee1cc4)
+![image](https://github.com/user-attachments/assets/1e715f8a-d027-4e30-a6a5-72deed56b24a)
+
 ## Build & Run
 You must first install SDL and OpenCL on your system. On Debian-style systems, this worked for me:
 ```bash
