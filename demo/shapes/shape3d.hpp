@@ -17,8 +17,8 @@ struct Shape3D {
 };
 
 // Functions to create shapes:
-Shape3D createHexPyramid(float radius, float height, int color);
-Shape3D createHexPrism(float radius, float height, int color);
+Shape3D createPyramid(int N, float radius, float height, int color);
+Shape3D createPrism(int N, float radius, float height, int color);
 Shape3D createCuboid(float Lx, float Ly, float H, int color);
 
 // Function to draw a Shape3D using your DepthBuffer and camera transforms.

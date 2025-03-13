@@ -15,8 +15,8 @@ struct Tower {
         : rotationSpeed(spinSpeed), position(pos)
     {
         baseCuboid = createCuboid(radius * 1.2f, radius * 1.2f, cuboidHeight, fromRgb(100,100,100));
-        hexPrism   = createHexPrism(radius, prismHeight, fromRgb(51,51,51));
-        hexPyramid = createHexPyramid(radius, pyramidHeight, fromRgb(100,50,50));
+        hexPrism   = createPrism(12,radius, prismHeight, fromRgb(51,51,51));
+        hexPyramid = createPyramid(12,radius, pyramidHeight, fromRgb(100,50,50));
 
         for (auto &v : hexPrism.vertices) {
             v.y += cuboidHeight + 1;
@@ -31,7 +31,7 @@ struct Tower {
     }
 
     void update() {
-        for (auto &v : baseCuboid.vertices) {
+        /*for (auto &v : baseCuboid.vertices) {
             v = rotY(v, position, rotationSpeed);
         }
         for (auto &v : hexPrism.vertices) {
@@ -39,7 +39,7 @@ struct Tower {
         }
         for (auto &v : hexPyramid.vertices) {
             v = rotY(v, position, rotationSpeed);
-        }
+        }*/
     }
 
     void draw(DepthBuffer& depthBuffer,

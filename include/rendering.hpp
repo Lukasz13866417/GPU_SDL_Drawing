@@ -36,6 +36,7 @@ class DepthBuffer{
         ~DepthBuffer();
         Uint32 *finishFrame();
         void drawTriangle(vec a, vec b, vec c, int clr);
+        void clear();
 };
 
 #endif // GPU_HPP

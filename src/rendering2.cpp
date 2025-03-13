@@ -153,14 +153,6 @@ class _DepthBuffer {
             if(triangleNormal(*a,*b,*c).z > 1){
                 return;
             }
-            if(isFirstDraw){
-                assert(clearingKernel->setArg(0, *depth)==CL_SUCCESS);
-                assert(clearingKernel->setArg(1, *color)==CL_SUCCESS);
-                assert(clearingKernel->setArg(2, maxx)==CL_SUCCESS);
-                cl::NDRange global_work_size(maxx+1, maxy+1);
-                assert(getGPU().getQueue().enqueueNDRangeKernel(*clearingKernel, cl::NullRange, global_work_size, cl::NullRange)==CL_SUCCESS);
-            }
-        
             float x1 = a->x, y1 = -a->y, z1 = a->z;
             float x2 = b->x, y2 = -b->y, z2 = b->z;
             float x3 = c->x, y3 = -c->y, z3 = c->z;
@@ -234,8 +226,17 @@ class _DepthBuffer {
         }
         Uint32* finishFrame() {
             isFirstDraw = true;
+            getGPU().getQueue().flush();
             getGPU().getQueue().enqueueReadBuffer(*color, CL_TRUE, 0, sizeof(Uint32) * n, colorArr);
             return colorArr;
+        }
+
+        void clear(){
+            assert(clearingKernel->setArg(0, *depth)==CL_SUCCESS);
+            assert(clearingKernel->setArg(1, *color)==CL_SUCCESS);
+            assert(clearingKernel->setArg(2, maxx)==CL_SUCCESS);
+            cl::NDRange global_work_size(maxx+1, maxy+1);
+            assert(getGPU().getQueue().enqueueNDRangeKernel(*clearingKernel, cl::NullRange, global_work_size, cl::NullRange)==CL_SUCCESS);
         }
 
         void drawTriangle(vec &a, vec &b, vec &c, int clr){
@@ -257,4 +258,8 @@ Uint32* DepthBuffer::finishFrame() {
 
 void DepthBuffer::drawTriangle(vec a, vec b, vec c, int clr){
     pimpl->drawTriangle(a,b,c,clr);
+}
+
+void DepthBuffer::clear(){
+    pimpl->clear();
 }

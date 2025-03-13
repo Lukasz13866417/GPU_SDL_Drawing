@@ -54,12 +54,11 @@ void drawShape(
     }
 }
 
-Shape3D createHexPyramid(float radius, float height, int color)
+Shape3D createPyramid(int N, float radius, float height, int color)
 {
     Shape3D pyramid;
     pyramid.color = color;
 
-    const int N = 6;
     float angleStep = 2.0f * PI / N;
 
     for(int i = 0; i < N; ++i) {
@@ -92,12 +91,11 @@ Shape3D createHexPyramid(float radius, float height, int color)
 }
 
 
-Shape3D createHexPrism(float radius, float height, int color)
+Shape3D createPrism(int N, float radius, float height, int color)
 {
     Shape3D prism;
     prism.color = color;
 
-    const int N = 6;
     float angleStep = 2.0f * PI / N;
 
     for(int i = 0; i < N; ++i){

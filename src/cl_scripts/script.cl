@@ -1,5 +1,27 @@
 typedef float3 vec3;
 
+int makeColorDarker(int color, float f)
+{
+    // 1) Extract the ARGB components
+    int a = (color >> 24) & 0xFF;
+    int r = (color >> 16) & 0xFF;
+    int g = (color >>  8) & 0xFF;
+    int b =  color        & 0xFF;
+
+    float factor = 1.0f - 0.00125f / f;  // bigger f => color gets darker
+    if (factor < 0.0f) factor = 0.0f;    // clamp minimum so we don't go negative
+    if (factor > 1.0f) factor = 1.0f;    // clamp maximum if needed
+
+    // 2) Apply the factor
+    r = (int)(r * factor);
+    g = (int)(g * factor);
+    b = (int)(b * factor);
+
+    // 3) Recombine into ARGB
+    int darkerColor = (a << 24) | (r << 16) | (g << 8) | b;
+    return darkerColor;
+}
+
                     // output buffers
 __kernel void draw(__global float* depthBuffer,__global int* colorArray,
                     // inverse z coords of triangle verts,   triangle color
