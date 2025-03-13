@@ -33,6 +33,7 @@ class _GPU{
                     break; // Exit after finding the first matching platform
                 }
             }
+            
             if (plat() == nullptr) { 
                 std::cerr << "No OpenCL 2.0 or newer platform found.\n";
                 throw std::runtime_error("No OpenCL 2.0 or newer platform found.");
@@ -43,6 +44,7 @@ class _GPU{
                 std::cerr << "No GPU device found.\n";
                 throw std::runtime_error("No GPU device found.");
             }
+
             device = devices.front(); // Use the first available device
             std::string deviceName;
             device.getInfo(CL_DEVICE_NAME, &deviceName);
@@ -168,8 +170,8 @@ class _DepthBuffer {
             }
             
         
-            x1 *= (float)(scr_z) / z1; x2 *= (float)(scr_z) / z2; x3 *= (float)(scr_z) / z3;
-            y1 *= (float)(scr_z) / z1; y2 *= (float)(scr_z) / z2; y3 *= (float)(scr_z) / z3; 
+            x1 *= (float)(scr_z) / abs(z1); x2 *= (float)(scr_z) / abs(z2); x3 *= (float)(scr_z) / abs(z3);
+            y1 *= (float)(scr_z) / abs(z1); y2 *= (float)(scr_z) / abs(z2); y3 *= (float)(scr_z) / abs(z3); 
 
             assert(drawingKernel->setArg(0, *depth)==CL_SUCCESS);
             assert(drawingKernel->setArg(1, *color)==CL_SUCCESS);
