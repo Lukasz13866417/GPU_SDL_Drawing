@@ -25,4 +25,4 @@ Or if you're not currently in ```build```:
 cd build
 ./app
 ```
-The whole point of this project for me was to challenge myself and to do as LITTLE research about 3D rendering as possible. With very basic knowledge (mostly learning what a Z-buffer is) I derived all the formulas myself. In the furture I will update this README with my derivations (After completing the project, I found my math approach was somewhat nonstandard)
+The whole point of this project for me was to challenge myself and to do as LITTLE research about 3D rendering as possible. With very basic knowledge (like, what a Z-buffer is and how OpenCL works) I derived all the formulas myself. In the furture I will update this README with my derivations (After completing the project, I found my math approach was somewhat nonstandard)
