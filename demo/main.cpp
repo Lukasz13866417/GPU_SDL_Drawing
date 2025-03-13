@@ -98,7 +98,7 @@ int main(){
         float z = float((rand() % 16001) + 8000);
         vec towerPos = {x, -100.0f, z};
 
-        Tower t(225.0f, 550.0f + float(rand()%551), 300.0f, 300.0f, 0.01f, towerPos);
+        Tower t(275.0f, 450.0f + float(rand()%551), 300.0f, 300.0f, 0.01f, towerPos);
         towers.push_back(t);
     }
 
