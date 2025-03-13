@@ -173,6 +173,18 @@ class _DepthBuffer {
             x1 *= (float)(scr_z) / abs(z1); x2 *= (float)(scr_z) / abs(z2); x3 *= (float)(scr_z) / abs(z3);
             y1 *= (float)(scr_z) / abs(z1); y2 *= (float)(scr_z) / abs(z2); y3 *= (float)(scr_z) / abs(z3); 
 
+            int boxLeft = std::min({x1,x2,x3}), boxRight = std::max({x1,x2,x3}), boxTop = std::min({y1,y2,y3}), boxBottom = std::max({y1,y2,y3});
+            if(boxRight < (-maxx/2) + 1 || boxLeft > (maxx/2) + 3 || boxTop > (maxy/2)+3 || boxBottom < (-maxy/2)+1){
+                return;
+            }
+            boxLeft = std::max(boxLeft,(-maxx/2) + 1);
+            boxRight = std::min(boxRight,(maxx/2) - 3);
+            boxTop = std::max(boxTop,(-maxy/2) + 1);
+            boxBottom = std::min(boxBottom,(maxy/2) - 3);
+            if(boxLeft>=boxRight || boxTop>=boxBottom){
+                return;
+            }
+
             assert(drawingKernel->setArg(0, *depth)==CL_SUCCESS);
             assert(drawingKernel->setArg(1, *color)==CL_SUCCESS);
 
@@ -185,14 +197,7 @@ class _DepthBuffer {
             assert(drawingKernel->setArg(4, 1.0f/z3)==CL_SUCCESS);
 
             assert(drawingKernel->setArg(5, clr)==CL_SUCCESS); 
-            int boxLeft = std::min({x1,x2,x3}), boxRight = std::max({x1,x2,x3}), boxTop = std::min({y1,y2,y3}), boxBottom = std::max({y1,y2,y3});
-            boxLeft = std::max(boxLeft,(-maxx/2) + 1);
-            boxRight = std::min(boxRight,(maxx/2) - 3);
-            boxTop = std::max(boxTop,(-maxy/2) + 1);
-            boxBottom = std::min(boxBottom,(maxy/2) - 3);
-            if(boxLeft>=boxRight || boxTop>=boxBottom){
-                return;
-            }
+            
            
             assert(drawingKernel->setArg(6, (maxx))==CL_SUCCESS); 
             assert(drawingKernel->setArg(7, (maxy))==CL_SUCCESS); 
@@ -230,8 +235,6 @@ class _DepthBuffer {
         Uint32* finishFrame() {
             isFirstDraw = true;
             getGPU().getQueue().enqueueReadBuffer(*color, CL_TRUE, 0, sizeof(Uint32) * n, colorArr);
-            getGPU().getQueue().flush();
-            //getGPU().getQueue().finish();
             return colorArr;
         }
 
