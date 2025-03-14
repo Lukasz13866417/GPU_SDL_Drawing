@@ -9,6 +9,7 @@ You must first install SDL and OpenCL on your system. On Debian-style systems, t
 ```bash
 sudo apt-get install opencl-headers
 sudo apt-get install ocl-icd-libopencl1
+sudo apt install ocl-icd-opencl-dev
 sudo apt install libsdl2-dev libsdl2-2.0-0 -y
 sudo apt-get install libsdl2-ttf-dev
 ```
