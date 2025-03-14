@@ -13,7 +13,8 @@ sudo apt install ocl-icd-opencl-dev
 sudo apt install libsdl2-dev libsdl2-2.0-0 -y
 sudo apt-get install libsdl2-ttf-dev
 ```
-Then, just build with CMake:
+The vendor-specific (NVidia/Intel/AMD) implementation of OpenCL might already be on your machine, but if it's not, you need to install it too. If you don't have it, the app will crash on launch and say that it can't find a platform. 
+After installation, just build with CMake:
 ```bash
 mkdir build && cd build
 cmake ..
