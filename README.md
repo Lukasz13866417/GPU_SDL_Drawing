@@ -25,7 +25,7 @@ To run, navigate to ```build``` directory and run:
 ./app 
 ```
 ## Overview
-The library is in ```src\``` and ```include\```. Rendering a colored 3D triangle onto a bitmap is the main feature it provides. The ```util``` file has some basic CPU-side math functions, color utilities and the only math objects in this renderer: ```tri``` and ```vec``` - 3D triangle and 3D vector. <br><br>
+The library is in ```src\``` and ```include\```. Rendering a colored 3D triangle onto a bitmap is the main feature it provides. <br>The ```util``` file has some basic CPU-side math functions, color utilities and the only math objects in this renderer: ```tri``` and ```vec``` - 3D triangle and 3D vector. <br><br>
 The ```rendering``` file:
 - Has a class ```GPU``` that abstracts away the whole OpenCL setup, like creating a context, platform and finding the GPU. 
 - Most importantly, there's the ```DepthBuffer``` class that has a bitmap that stores the color of every pixel on the screen, as well as a depth buffer. 
