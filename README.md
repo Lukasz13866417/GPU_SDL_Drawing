@@ -33,4 +33,4 @@ The ```rendering``` file:
 - To fetch results after you're done with 3D rendering in a given frame, you simply call ```DepthBuffer```'s ```finishFrame()```. This method returns the color bitmap for this frame. You can draw it onto the screen with libs like SDL (used here). 
 - You can also ```clear``` the buffer (e.g. at the beginning of 3D rendering in a given frame).
 ## My idea
-My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
+My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. Going into this, I didn't even know how a 3D point is projected onto a 2D screen. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
