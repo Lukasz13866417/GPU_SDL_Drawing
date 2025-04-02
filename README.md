@@ -1,5 +1,5 @@
-# Basic Hardware Renderer
-Proof of concept. Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute depth buffer values. \
+# Hardware Renderer from scratch with Open Computing Language (OpenCL)
+Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute depth buffer values. \
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with ```main.cpp``` and some helper files. You can walk around a scene with randomly spawned 3D towers.
 ![image](https://github.com/user-attachments/assets/1e715f8a-d027-4e30-a6a5-72deed56b24a)
