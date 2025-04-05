@@ -108,10 +108,9 @@ void deleteGPU(){
 
 class _DepthBuffer {
     private:
-        int n, maxx, maxy, scr_z;
-        Uint32 *colorArr;
-        float *depthArr;
-        std::shared_ptr<cl::Buffer> depth, color; 
+        int32_t n, maxx, maxy, scr_z;
+        uint32_t *colorArr;
+        std::shared_ptr<cl::Buffer> depth, color, globalData; 
         std::shared_ptr<cl::Program> drawFunctions;
         std::shared_ptr<cl::Kernel> clearingKernel, drawingKernel;
 
@@ -131,10 +130,6 @@ class _DepthBuffer {
 
         void initOpenCL() {
             assert(getGPU().isInitialized());
-            depth = std::make_shared<cl::Buffer>(getGPU().getContext(), CL_MEM_READ_WRITE, sizeof(float) * n);
-            color = std::make_shared<cl::Buffer>(getGPU().getContext(), CL_MEM_READ_WRITE, sizeof(Uint32) * n);
-            getGPU().getQueue().enqueueWriteBuffer(*depth, CL_TRUE, 0, sizeof(float) * n, depthArr);
-            getGPU().getQueue().enqueueWriteBuffer(*color, CL_TRUE, 0, sizeof(Uint32) * n, colorArr);
 
             cl::Program::Sources sources;
            
@@ -144,18 +139,59 @@ class _DepthBuffer {
             cl::Program program(getGPU().getContext(), sources);
             program.build("-cl-std=CL3.0");
 
+            
+            uint32_t addressBits = getGPU().getDevice().getInfo<CL_DEVICE_ADDRESS_BITS>();
+
+            cl::Buffer globalDataSizeBuffer(getGPU().getContext(),CL_MEM_READ_WRITE,sizeof(uint32_t));
+            uint32_t globalDataSize;
+            cl::Kernel globalDataSizeKernel(program,"getGlobalDataSize");
+
+            cl::NDRange global_work_size(1);
+
+            assert(globalDataSizeKernel.setArg(0, globalDataSizeBuffer) == CL_SUCCESS);
+            assert(getGPU().getQueue().enqueueNDRangeKernel(globalDataSizeKernel,cl::NullRange,global_work_size,cl::NullRange) == CL_SUCCESS);
+            assert(getGPU().getQueue().enqueueReadBuffer(globalDataSizeBuffer, CL_TRUE, 0, sizeof(uint32_t), &globalDataSize) == CL_SUCCESS);
+            std::cout<<"GPU address bits: "<<addressBits<<", GPU global data struct size: "<<globalDataSize<<std::endl;
+            getGPU().getQueue().flush();
+
+
+            depth = std::make_shared<cl::Buffer>(getGPU().getContext(), CL_MEM_READ_WRITE, sizeof(float) * n);
+            color = std::make_shared<cl::Buffer>(getGPU().getContext(), CL_MEM_READ_WRITE, sizeof(uint32_t) * n);
+            globalData = std::make_shared<cl::Buffer>(getGPU().getContext(),CL_MEM_READ_ONLY,globalDataSize); // wiele
+
+            cl::Kernel globalDataKernel(program,"makeGlobalData"); 
+            assert(globalDataKernel.setArg(0, *depth) == CL_SUCCESS); 
+            assert(globalDataKernel.setArg(1, *color) == CL_SUCCESS); 
+            assert(globalDataKernel.setArg(2, *globalData) == CL_SUCCESS); 
+            assert(globalDataKernel.setArg(3, maxx) == CL_SUCCESS); 
+            assert(globalDataKernel.setArg(4, maxy) == CL_SUCCESS); 
+ 
+            assert(getGPU().getQueue().enqueueNDRangeKernel(globalDataKernel,cl::NullRange,global_work_size,cl::NullRange) == CL_SUCCESS);
+            getGPU().getQueue().flush();
+
+
             // Create the OpenCL kernels
             clearingKernel = std::make_shared<cl::Kernel>(program,"clear");
+            assert(clearingKernel->setArg(0, *depth) == CL_SUCCESS);
+            assert(clearingKernel->setArg(1, *color) == CL_SUCCESS);
+            assert(clearingKernel->setArg(2, maxx) == CL_SUCCESS); 
+
             drawingKernel = std::make_shared<cl::Kernel>(program,"draw");
+            assert(drawingKernel->setArg(0, *depth) == CL_SUCCESS);
+            assert(drawingKernel->setArg(1, *color) == CL_SUCCESS);
+            assert(drawingKernel->setArg(2, maxx) == CL_SUCCESS); 
+            assert(drawingKernel->setArg(3, maxy) == CL_SUCCESS); 
+
         }    
 
-        void _drawTriangle(vec *a, vec *b, vec *c, int clr){
-            if(triangleNormal(*a,*b,*c).z > 1){
+
+        void _drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
+            if(triangleNormal(a,b,c).z > 1){
                 return;
             }
-            float x1 = a->x, y1 = -a->y, z1 = a->z;
-            float x2 = b->x, y2 = -b->y, z2 = b->z;
-            float x3 = c->x, y3 = -c->y, z3 = c->z;
+            float x1 = a.x, y1 = -a.y, z1 = a.z;
+            float x2 = b.x, y2 = -b.y, z2 = b.z;
+            float x3 = c.x, y3 = -c.y, z3 = c.z;
 
             if(z1 < 10 && z2 < 10 && z3 < 10){
                 return;
@@ -177,22 +213,17 @@ class _DepthBuffer {
                 return;
             }
 
-            assert(drawingKernel->setArg(0, *depth)==CL_SUCCESS);
-            assert(drawingKernel->setArg(1, *color)==CL_SUCCESS);
 
             cl_float3 v1 = {{x1, y1, 1.0f/z1}};
             cl_float3 v2 = {{x2, y2, 1.0f/z2}};
             cl_float3 v3 = {{x3, y3, 1.0f/z3}};
 
-            assert(drawingKernel->setArg(2, 1.0f/z1)==CL_SUCCESS);
-            assert(drawingKernel->setArg(3, 1.0f/z2)==CL_SUCCESS);
-            assert(drawingKernel->setArg(4, 1.0f/z3)==CL_SUCCESS);
+            assert(drawingKernel->setArg(4, 1.0f/z1)==CL_SUCCESS);
+            assert(drawingKernel->setArg(5, 1.0f/z2)==CL_SUCCESS);
+            assert(drawingKernel->setArg(6, 1.0f/z3)==CL_SUCCESS);
 
-            assert(drawingKernel->setArg(5, clr)==CL_SUCCESS); 
-            
+            assert(drawingKernel->setArg(7, clr)==CL_SUCCESS); 
            
-            assert(drawingKernel->setArg(6, (maxx))==CL_SUCCESS); 
-            assert(drawingKernel->setArg(7, (maxy))==CL_SUCCESS); 
             assert(drawingKernel->setArg(8, (boxLeft))==CL_SUCCESS); 
             assert(drawingKernel->setArg(9, (boxTop))==CL_SUCCESS); 
             float inv = 1.0f/(x1*y2 - x1*y3 - y1*x2 + y1*x3 + x2*y3 - y2*x3);
@@ -216,31 +247,26 @@ class _DepthBuffer {
     public:
 
         _DepthBuffer(int scr_w, int scr_h, int scr_z, GPU* gpu) : n((scr_w+1)*(scr_h+1)+1), maxx(scr_w), maxy(scr_h), scr_z(scr_z){
-            colorArr = new Uint32[n];
-            depthArr = new float[n];
+            colorArr = new uint32_t[n];
             initOpenCL();
         }
         ~_DepthBuffer(){
             delete colorArr;
-            delete depthArr;
         }
-        Uint32* finishFrame() {
+        uint32_t* finishFrame() {
             isFirstDraw = true;
             getGPU().getQueue().flush();
-            getGPU().getQueue().enqueueReadBuffer(*color, CL_TRUE, 0, sizeof(Uint32) * n, colorArr);
+            getGPU().getQueue().enqueueReadBuffer(*color, CL_TRUE, 0, sizeof(uint32_t) * n, colorArr);
             return colorArr;
         }
 
         void clear(){
-            assert(clearingKernel->setArg(0, *depth)==CL_SUCCESS);
-            assert(clearingKernel->setArg(1, *color)==CL_SUCCESS);
-            assert(clearingKernel->setArg(2, maxx)==CL_SUCCESS);
             cl::NDRange global_work_size(maxx+1, maxy+1);
             assert(getGPU().getQueue().enqueueNDRangeKernel(*clearingKernel, cl::NullRange, global_work_size, cl::NullRange)==CL_SUCCESS);
         }
 
-        void drawTriangle(vec &a, vec &b, vec &c, int clr){
-            _drawTriangle(&a,&b,&c,clr);
+        void drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
+            _drawTriangle(a,b,c,clr);
         }
 };
 
@@ -252,11 +278,11 @@ DepthBuffer::~DepthBuffer(){
     delete pimpl;
 }
 
-Uint32* DepthBuffer::finishFrame() {
+uint32_t* DepthBuffer::finishFrame() {
     return pimpl->finishFrame();
 }
 
-void DepthBuffer::drawTriangle(vec a, vec b, vec c, int clr){
+void DepthBuffer::drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
     pimpl->drawTriangle(a,b,c,clr);
 }
 

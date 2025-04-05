@@ -119,6 +119,8 @@ int main(){
     Uint32 frameStart;
     int frameTime;
 
+    size_t lagCount = 0;
+
     while (!quit) {
         frameStart = SDL_GetTicks();
 
@@ -180,6 +182,8 @@ int main(){
         frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
+        }else{
+            std::cout<<"AAAA!!!  x"<<(++lagCount)<<std::endl;
         }
     }
 

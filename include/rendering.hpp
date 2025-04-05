@@ -34,8 +34,8 @@ class DepthBuffer{
     public:
         DepthBuffer(int scr_s, int scr_h, int scr_z);
         ~DepthBuffer();
-        Uint32 *finishFrame();
-        void drawTriangle(vec a, vec b, vec c, int clr);
+        uint32_t *finishFrame();
+        void drawTriangle(const vec &a,const vec &b,const vec &c, int clr);
         void clear();
 };
 

@@ -1,5 +1,31 @@
 typedef float3 vec3;
 
+typedef struct global_data {
+    __global float* depthBuffer;
+    __global int* colorArray;
+    int screen_width,screen_height;
+} global_data_t;
+
+__kernel void makeGlobalData(__global float* depthBuffer,
+                             __global int* colorArray,
+                             __global global_data_t* res,
+                             int screen_width,
+                             int screen_height) {
+    if (get_global_id(0) == 0) {
+        res->depthBuffer = depthBuffer;
+        res->colorArray  = colorArray;
+        res->screen_width  = screen_width;
+        res->screen_height = screen_height;
+    }
+}
+
+__kernel void getGlobalDataSize(__global int* res){
+    if (get_global_id(0) == 0) {
+        *res = sizeof(global_data_t);
+    }
+}
+
+
 int makeColorDarker(int color, float f)
 {
     // 1) Extract the ARGB components
@@ -22,11 +48,12 @@ int makeColorDarker(int color, float f)
     return darkerColor;
 }
 
-                    // output buffers
-__kernel void draw(__global float* depthBuffer,__global int* colorArray,
-                    // inverse z coords of triangle verts,   triangle color
-                   float z1, float z2, float z3,               int clr,
+                                  // output buffers
+__kernel void draw(__global float* depthBuffer,__global int* colorArray, 
                    int screen_width, int screen_height, 
+                   // inverse z coords of triangle verts,   triangle color
+                   float z1, float z2, float z3,               int clr,
+                   
                    // top left corner of triangle projection's bbox
                    int minX, int minY,  
                    // preprocessed values for math calculations. Further explained below.
