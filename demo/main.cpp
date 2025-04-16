@@ -106,7 +106,7 @@ int main(){
     float cameraYaw   = 0.0f;
     float cameraPitch = 0.0f;
 
-    float moveSpeed = 20.0f;
+    float moveSpeed = 60.0f;
     float mouseSens = 0.001f;
 
     bool quit = false;
@@ -185,11 +185,6 @@ int main(){
         frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
-        }else if(frameDelay < frameTime){
-            std::cout<<"AAAA!!!  x"<<(++lagCount)<<std::endl;
-        }
-        if((++xd)%100==0){
-            std::cout<<frameTime<<std::endl;
         }
     }
 
