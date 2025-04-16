@@ -8,7 +8,6 @@
 #include "../include/rendering.hpp" 
 #include "../include/util.hpp"      
 
-
 void drawText(const std::string &what, int x, int y, SDL_Renderer* renderer){
     static TTF_Font* font = nullptr;
     if (!font) {
@@ -121,6 +120,8 @@ int main(){
 
     size_t lagCount = 0;
 
+    uint64_t xd=0;
+
     while (!quit) {
         frameStart = SDL_GetTicks();
 
@@ -178,12 +179,17 @@ int main(){
 
         SDL_RenderPresent(renderer);
 
+        
+
         // Cap framerate
         frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
-        }else{
+        }else if(frameDelay < frameTime){
             std::cout<<"AAAA!!!  x"<<(++lagCount)<<std::endl;
+        }
+        if((++xd)%100==0){
+            std::cout<<frameTime<<std::endl;
         }
     }
 

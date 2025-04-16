@@ -108,7 +108,8 @@ void deleteGPU(){
 
 class _DepthBuffer {
     private:
-        int32_t n, maxx, maxy, scr_z;
+        int32_t n, maxx, maxy;
+        int32_t scr_z;
         uint32_t *colorArr;
         std::shared_ptr<cl::Buffer> depth, color, globalData; 
         std::shared_ptr<cl::Program> drawFunctions;
@@ -181,11 +182,10 @@ class _DepthBuffer {
             assert(drawingKernel->setArg(1, *color) == CL_SUCCESS);
             assert(drawingKernel->setArg(2, maxx) == CL_SUCCESS); 
             assert(drawingKernel->setArg(3, maxy) == CL_SUCCESS); 
-
         }    
 
 
-        void _drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
+        void _enqueueDrawTriangle(const vec &a, const vec &b, const vec &c, int clr){
             if(triangleNormal(a,b,c).z > 1){
                 return;
             }
@@ -205,10 +205,10 @@ class _DepthBuffer {
             if(boxRight < (-maxx/2) + 1 || boxLeft > (maxx/2) + 3 || boxTop > (maxy/2)+3 || boxBottom < (-maxy/2)+1){
                 return;
             }
-            boxLeft = std::max(boxLeft,(-maxx/2) + 1);
-            boxRight = std::min(boxRight,(maxx/2) - 3);
-            boxTop = std::max(boxTop,(-maxy/2) + 1);
-            boxBottom = std::min(boxBottom,(maxy/2) - 3);
+            boxLeft = std::max(boxLeft,(-(int32_t)maxx/2) + 1);
+            boxRight = std::min(boxRight,((int32_t)maxx/2) - 3);
+            boxTop = std::max(boxTop,(-(int32_t)maxy/2) + 1);
+            boxBottom = std::min(boxBottom,((int32_t)maxy/2) - 3);
             if(boxLeft>=boxRight || boxTop>=boxBottom){
                 return;
             }
@@ -244,6 +244,10 @@ class _DepthBuffer {
             isFirstDraw = false;
         }
 
+        void flushTriangles(){
+
+        }
+
     public:
 
         _DepthBuffer(int scr_w, int scr_h, int scr_z, GPU* gpu) : n((scr_w+1)*(scr_h+1)+1), maxx(scr_w), maxy(scr_h), scr_z(scr_z){
@@ -265,8 +269,8 @@ class _DepthBuffer {
             assert(getGPU().getQueue().enqueueNDRangeKernel(*clearingKernel, cl::NullRange, global_work_size, cl::NullRange)==CL_SUCCESS);
         }
 
-        void drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
-            _drawTriangle(a,b,c,clr);
+        void enqueueDrawTriangle(const vec &a, const vec &b, const vec &c, int clr){
+            _enqueueDrawTriangle(a,b,c,clr);
         }
 };
 
@@ -282,8 +286,8 @@ uint32_t* DepthBuffer::finishFrame() {
     return pimpl->finishFrame();
 }
 
-void DepthBuffer::drawTriangle(const vec &a, const vec &b, const vec &c, int clr){
-    pimpl->drawTriangle(a,b,c,clr);
+void DepthBuffer::enqueueDrawTriangle(const vec &a, const vec &b, const vec &c, int clr){
+    pimpl->enqueueDrawTriangle(a,b,c,clr);
 }
 
 void DepthBuffer::clear(){

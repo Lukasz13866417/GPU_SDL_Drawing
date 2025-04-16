@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(GPU_SDL_Drawing LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 find_package(OpenCL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
@@ -16,6 +18,8 @@ target_include_directories(app PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/demo/shapes"
 )
+
+add_compile_options("-Ofast")
 
 target_include_directories(app PRIVATE ${OpenCL_INCLUDE_DIRS})
 target_link_libraries(app PRIVATE ${OpenCL_LIBRARIES})

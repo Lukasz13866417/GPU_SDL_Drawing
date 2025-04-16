@@ -50,7 +50,7 @@ void drawShape(
 
         // Draw
         int faceColor = shape.faceColors[i];
-        depthBuffer.drawTriangle(v0World, v1World, v2World, faceColor);
+        depthBuffer.enqueueDrawTriangle(v0World, v1World, v2World, faceColor);
     }
 }
 

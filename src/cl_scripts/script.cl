@@ -9,8 +9,8 @@ typedef struct global_data {
 __kernel void makeGlobalData(__global float* depthBuffer,
                              __global int* colorArray,
                              __global global_data_t* res,
-                             int screen_width,
-                             int screen_height) {
+                             uint screen_width,
+                             uint screen_height) {
     if (get_global_id(0) == 0) {
         res->depthBuffer = depthBuffer;
         res->colorArray  = colorArray;
@@ -92,7 +92,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     float f; // distance from camera to point on original triangle, 
              // that corresponds to this pixel (if this px lies in triangle projection)
              // Actually, it's the inverse of that distance.
-    // (camera is at (0,0,0)
+    // camera is at (0,0,0)
     // test if pixel is inside triangle's projection 
     if(lambda1>0 && lambda2>0 && lambda1+lambda2<1){ 
         f = lambda2*z3 + lambda1*z2 + (1-lambda1-lambda2)*z1;
@@ -142,7 +142,7 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
     }    
 }
 
-__kernel void clear(__global float* depthBuffer,__global int* colorArray, int screen_width) {
+__kernel void clear(__global float* depthBuffer,__global int* colorArray, uint screen_width) {
     int x = get_global_id(0);
     int y = get_global_id(1);
     int index = y * screen_width + x;
