@@ -1,8 +1,8 @@
 # Hardware Renderer from scratch with Open Computing Language (OpenCL)
 > For continuation, visit [here](https://github.com/Lukasz13866417/HardwareRenderer)
 
-
-Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute depth buffer values. \
+This is the **simplest, most straightforward way** to do 3D rendering on the GPU without any renderer like OpenGL, Vulkan etc. \
+This API can draw colored 3D triangles using the GPU with self-made OpenCL scripts (kernels) \
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with ```main.cpp``` and some helper files. You can walk around a scene with randomly spawned 3D towers.
 ![image](https://github.com/user-attachments/assets/1e715f8a-d027-4e30-a6a5-72deed56b24a)
