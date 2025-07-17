@@ -37,4 +37,4 @@ The ```rendering``` file:
 - You can also ```clear``` the buffer (e.g. at the beginning of 3D rendering in a given frame).
 ## My idea
 My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. I didn't even know how a 3D point is projected onto a screen. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. <br>
-This resulted in the creation of a very concise, self-contained project that doesn't confuse the user by doing unnecessary stuff. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
+This resulted in **a very concise, self-contained** project that **doesn't confuse the user** by doing unnecessary stuff. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
