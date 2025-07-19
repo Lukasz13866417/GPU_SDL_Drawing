@@ -1,8 +1,8 @@
 # Hardware Renderer from scratch with Open Computing Language (OpenCL)
 > For continuation, visit [here](https://github.com/Lukasz13866417/HardwareRenderer)
 
-
-Can draw colored 3D triangles using the GPU with self-made OpenCL scripts that use barycentric coords and interpolation to compute depth buffer values. \
+This is the **simplest, most straightforward way** to do 3D rendering on the GPU without any renderer like OpenGL, Vulkan etc. \
+This API can draw colored 3D triangles using the GPU with self-made OpenCL scripts (kernels) \
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with two demos: ```demo_towers.cpp``` and ```demo_minecraft.cpp``` and some helper files. 
 ### Demo Minecraft
@@ -42,4 +42,5 @@ The ```rendering``` file:
 - To fetch results after you're done with 3D rendering in a given frame, you simply call ```DepthBuffer```'s ```finishFrame()```. This method returns the color bitmap for this frame. You can draw it onto the screen with libs like SDL (used here). 
 - You can also ```clear``` the buffer (e.g. at the beginning of 3D rendering in a given frame).
 ## My idea
-My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. Going into this, I didn't even know how a 3D point is projected onto a 2D screen. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. In the furture I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
+My goal was to challenge myself and do as LITTLE research about 3D rendering as possible. I didn't even know how a 3D point is projected onto a screen. With very basic knowledge (like, what a depth buffer is) I derived all the formulas myself. <br><br>
+This resulted in **a very concise, self-contained** project that **doesn't confuse the user** by doing unnecessary stuff. <br><br> In the future I might add my derivations to this README. I think my approach might have been somewhat nonstandard. <br><br>
