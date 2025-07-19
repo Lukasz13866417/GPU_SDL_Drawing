@@ -6,8 +6,7 @@ This API can draw colored 3D triangles using the GPU with self-made OpenCL scrip
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with two demos: ```demo_towers.cpp``` and ```demo_minecraft.cpp``` and some helper files. 
 ### Demo Minecraft
-
-
+<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/55cafa20-c23f-4c88-8d1d-61ffe76fb7a9" />
 You can move around a scene with a minecraft dirt block that's spinning
 ### Demo Towers
 You can walk around a scene with randomly spawned 3D towers.
