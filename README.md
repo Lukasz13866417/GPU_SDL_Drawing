@@ -3,8 +3,7 @@
 
 This is the **simplest, most straightforward way** to do 3D rendering on the GPU **without any renderer**. <br> **NOT USING OpenGL, Vulkan etc** \
 This API can draw colored 3D triangles using the GPU with self-made OpenCL scripts (kernels) \
-The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
-There's a ```demo``` folder with two demos: ```demo_towers.cpp``` and ```demo_minecraft.cpp``` and some helper files. 
+Apart from actual code in ```include``` and ```src```, there's a ```demo``` folder with two demos: ```demo_towers.cpp``` and ```demo_minecraft.cpp``` and some helper files. 
 ### Demo Minecraft
 
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/55cafa20-c23f-4c88-8d1d-61ffe76fb7a9" />
