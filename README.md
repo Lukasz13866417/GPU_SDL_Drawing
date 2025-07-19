@@ -1,7 +1,7 @@
 # Hardware Renderer from scratch
 > For continuation, visit [here](https://github.com/Lukasz13866417/HardwareRenderer)
 
-This is the **simplest, most straightforward way** to do 3D rendering on the GPU **without any renderer**. <br> **ZERO OpenGL, Vulkan etc** \
+This is the **simplest, most straightforward way** to do 3D rendering on the GPU **without any renderer**. <br> **NOT USING OpenGL, Vulkan etc** \
 This API can draw colored 3D triangles using the GPU with self-made OpenCL scripts (kernels) \
 The main part is in ```src/``` and ```include/```. It's my library that handles all the rendering.\
 There's a ```demo``` folder with two demos: ```demo_towers.cpp``` and ```demo_minecraft.cpp``` and some helper files. 
