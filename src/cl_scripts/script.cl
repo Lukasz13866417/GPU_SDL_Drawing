@@ -149,3 +149,118 @@ __kernel void clear(__global float* depthBuffer,__global int* colorArray, uint s
     depthBuffer[index] = -1000000000000.0f;
     colorArray[index] = 255<<24; //  black
 }
+
+int sampleTexture(__global int* texture, int tex_width, int tex_height, float u, float v) {
+    // Convert to pixel coordinates
+    // UV coordinates are already guaranteed to be in [0,1] from barycentric interpolation
+    int px = (int)(u * (tex_width - 1));
+    int py = (int)(v * (tex_height - 1));
+    
+    // Sample texture
+    return texture[py * tex_width + px];
+}
+
+__kernel void drawTextured(__global float* depthBuffer, __global int* colorArray, 
+                          int screen_width, int screen_height, 
+                          // inverse z coords of triangle verts
+                          float w1, float w2, float w3,
+                          // texture data
+                          __global int* texture, int tex_width, int tex_height,
+                          // pre-multiplied texture coordinates for each vertex (u/z, v/z)
+                          float ta_u_w, float ta_v_w, float tb_u_w, float tb_v_w, float tc_u_w, float tc_v_w,
+                          // top left corner of triangle projection's bbox
+                          int minX, int minY,  
+                          // preprocessed values for barycentric calculations
+                          float dx1, float dx2, float dy1, 
+                          float dy2, float lambda1, float lambda2) {
+
+    // coords of current pixel
+    int x = 2*(get_global_id(0))+minX; 
+    int y = 2*(get_global_id(1))+minY; 
+
+    // Calculate barycentric coordinates for current pixel
+    float l1 = lambda1 + x*dx1 + y*dy1;
+    float l2 = lambda2 + x*dx2 + y*dy2;
+    float l3 = 1.0f - l1 - l2;
+
+    // index of pixel in color buffer / z buffer
+    int index = (y + (screen_height / 2)) * screen_width + (x + (screen_width / 2));
+    
+    // test if pixel is inside triangle's projection 
+    if(l1 > 0 && l2 > 0 && l1 + l2 < 1) { 
+        // Interpolate inverse depth using screen-space barycentric coordinates
+        float w_interp = l3*w1 + l1*w2 + l2*w3;
+        
+        // Test if point is closer to camera than last candidate
+        if (w_interp < 800 && w_interp > depthBuffer[index]) { 
+            // Interpolate pre-multiplied texture coordinates
+            float u_w = l3*ta_u_w + l1*tb_u_w + l2*tc_u_w;
+            float v_w = l3*ta_v_w + l1*tb_v_w + l2*tc_v_w;
+
+            // Divide by interpolated inverse depth to get perspective-correct u,v
+            float u = u_w / w_interp;
+            float v = v_w / w_interp;
+            
+            // Sample texture and write to color buffer
+            int texColor = sampleTexture(texture, tex_width, tex_height, u, v);
+            
+            depthBuffer[index] = w_interp;
+            colorArray[index] = texColor;
+        }
+    }
+
+    // Repeat for every pixel in 2x2px tile
+    // Process pixel (x+1, y)
+    ++index;
+    l1 += dx1;
+    l2 += dx2;
+    l3 = 1.0f - l1 - l2;
+    if(l1 > 0 && l2 > 0 && l1 + l2 < 1) {
+        float w_interp = l3*w1 + l1*w2 + l2*w3;
+        if (w_interp < 800 && w_interp > depthBuffer[index]) {
+            float u_w = l3*ta_u_w + l1*tb_u_w + l2*tc_u_w;
+            float v_w = l3*ta_v_w + l1*tb_v_w + l2*tc_v_w;
+            float u = u_w / w_interp;
+            float v = v_w / w_interp;
+            int texColor = sampleTexture(texture, tex_width, tex_height, u, v);
+            depthBuffer[index] = w_interp;
+            colorArray[index] = texColor;
+        }
+    }
+
+    // Process pixel (x+1, y+1)
+    index += screen_width;
+    l1 += dy1; 
+    l2 += dy2;
+    l3 = 1.0f - l1 - l2;
+    if(l1 > 0 && l2 > 0 && l1 + l2 < 1) {
+        float w_interp = l3*w1 + l1*w2 + l2*w3;
+        if (w_interp < 800 && w_interp > depthBuffer[index]) {
+            float u_w = l3*ta_u_w + l1*tb_u_w + l2*tc_u_w;
+            float v_w = l3*ta_v_w + l1*tb_v_w + l2*tc_v_w;
+            float u = u_w / w_interp;
+            float v = v_w / w_interp;
+            int texColor = sampleTexture(texture, tex_width, tex_height, u, v);
+            depthBuffer[index] = w_interp;
+            colorArray[index] = texColor;
+        }
+    }
+
+    // Process pixel (x, y+1)
+    --index;
+    l1 -= dx1;
+    l2 -= dx2;
+    l3 = 1.0f - l1 - l2;
+    if(l1 > 0 && l2 > 0 && l1 + l2 < 1) {
+        float w_interp = l3*w1 + l1*w2 + l2*w3;
+        if (w_interp < 800 && w_interp > depthBuffer[index]) {
+            float u_w = l3*ta_u_w + l1*tb_u_w + l2*tc_u_w;
+            float v_w = l3*ta_v_w + l1*tb_v_w + l2*tc_v_w;
+            float u = u_w / w_interp;
+            float v = v_w / w_interp;
+            int texColor = sampleTexture(texture, tex_width, tex_height, u, v);
+            depthBuffer[index] = w_interp;
+            colorArray[index] = texColor;
+        }
+    }    
+}

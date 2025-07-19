@@ -8,16 +8,30 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <optional>
 #include "../include/rendering.hpp"
 #include "../include/util.hpp"
+#include <map>
 
-class _GPU{
+class _GPU {
+    friend class GPU; // Allow facade to access private members
     private:
         bool initialized = false;
         cl::Platform plat;
         cl::Context context;
         cl::CommandQueue queue;
         cl::Device device;
+        std::map<size_t, std::unique_ptr<Texture>> texture_map;
+        size_t next_texture_id = 0;
+
+        Texture* getTexture(size_t id) {
+            auto it = texture_map.find(id);
+            if (it != texture_map.end()) {
+                return it->second.get();
+            }
+            return nullptr;
+        }
+
     public:
         bool isInitialized(){
             return initialized;
@@ -67,6 +81,13 @@ class _GPU{
         cl::Context& getContext(){
             return context;
         }
+
+        size_t createTexture(int width, int height, const uint32_t* data) {
+            size_t id = next_texture_id++;
+            // Use new Texture(...) directly as _GPU is a friend
+            texture_map[id] = std::unique_ptr<Texture>(new Texture(width, height, data));
+            return id;
+        }
 };
 
 GPU* gpu;
@@ -94,6 +115,14 @@ cl::Context& GPU::getContext(){
     return pimpl->getContext();
 }
 
+size_t GPU::createTexture(int width, int height, const uint32_t* data) {
+    return pimpl->createTexture(width, height, data);
+}
+
+Texture* GPU::getTexture(size_t id) {
+    return pimpl->getTexture(id);
+}
+
 void initGPU(){
     gpu = new GPU();
 }
@@ -113,7 +142,7 @@ class _DepthBuffer {
         uint32_t *colorArr;
         std::shared_ptr<cl::Buffer> depth, color, globalData; 
         std::shared_ptr<cl::Program> drawFunctions;
-        std::shared_ptr<cl::Kernel> clearingKernel, drawingKernel;
+        std::shared_ptr<cl::Kernel> clearingKernel, drawingKernel, texturedDrawingKernel;
 
         bool isFirstDraw = true;
 
@@ -181,7 +210,13 @@ class _DepthBuffer {
             assert(drawingKernel->setArg(0, *depth) == CL_SUCCESS);
             assert(drawingKernel->setArg(1, *color) == CL_SUCCESS);
             assert(drawingKernel->setArg(2, maxx) == CL_SUCCESS); 
-            assert(drawingKernel->setArg(3, maxy) == CL_SUCCESS); 
+            assert(drawingKernel->setArg(3, maxy) == CL_SUCCESS);
+            
+            texturedDrawingKernel = std::make_shared<cl::Kernel>(program,"drawTextured");
+            assert(texturedDrawingKernel->setArg(0, *depth) == CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(1, *color) == CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(2, maxx) == CL_SUCCESS); 
+            assert(texturedDrawingKernel->setArg(3, maxy) == CL_SUCCESS); 
         }    
 
 
@@ -193,7 +228,8 @@ class _DepthBuffer {
             float x2 = b.x, y2 = -b.y, z2 = b.z;
             float x3 = c.x, y3 = -c.y, z3 = c.z;
 
-            if(z1 < 10 && z2 < 10 && z3 < 10){
+            // Cull the triangle if any vertex is too close to or behind the camera's near plane.
+            if(z1 < 10 || z2 < 10 || z3 < 10){
                 return;
             }
             
@@ -272,6 +308,79 @@ class _DepthBuffer {
         void enqueueDrawTriangle(const vec &a, const vec &b, const vec &c, int clr){
             _enqueueDrawTriangle(a,b,c,clr);
         }
+
+        void _enqueueDrawTexturedTriangle(const vec &a, const vec &b, const vec &c, 
+                                        const TexCoord &ta, const TexCoord &tb, const TexCoord &tc,
+                                        Texture& texture) {
+            
+            if(triangleNormal(a,b,c).z > 1){
+                return;
+            }
+            float x1 = a.x, y1 = -a.y, z1 = a.z;
+            float x2 = b.x, y2 = -b.y, z2 = b.z;
+            float x3 = c.x, y3 = -c.y, z3 = c.z;
+
+            // Cull the triangle if any vertex is too close to or behind the camera's near plane.
+            // This is a simple fix to prevent division by zero in the perspective-correct calculations.
+            if(z1 < 10 || z2 < 10 || z3 < 10){
+                return;
+            }
+            
+            x1 *= (float)(scr_z) / abs(z1); x2 *= (float)(scr_z) / abs(z2); x3 *= (float)(scr_z) / abs(z3);
+            y1 *= (float)(scr_z) / abs(z1); y2 *= (float)(scr_z) / abs(z2); y3 *= (float)(scr_z) / abs(z3); 
+
+            int boxLeft = std::min({x1,x2,x3}), boxRight = std::max({x1,x2,x3}), boxTop = std::min({y1,y2,y3}), boxBottom = std::max({y1,y2,y3});
+            if(boxRight < (-maxx/2) + 1 || boxLeft > (maxx/2) + 3 || boxTop > (maxy/2)+3 || boxBottom < (-maxy/2)+1){
+                return;
+            }
+            boxLeft = std::max(boxLeft,(-(int32_t)maxx/2) + 1);
+            boxRight = std::min(boxRight,((int32_t)maxx/2) - 3);
+            boxTop = std::max(boxTop,(-(int32_t)maxy/2) + 1);
+            boxBottom = std::min(boxBottom,((int32_t)maxy/2) - 3);
+            if(boxLeft>=boxRight || boxTop>=boxBottom){
+                return;
+            }
+
+            float w1 = 1.0f/z1;
+            float w2 = 1.0f/z2;
+            float w3 = 1.0f/z3;
+
+            // Set kernel arguments for textured triangle
+            assert(texturedDrawingKernel->setArg(4, w1)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(5, w2)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(6, w3)==CL_SUCCESS);
+            
+            assert(texturedDrawingKernel->setArg(7, texture.getBuffer())==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(8, texture.getWidth())==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(9, texture.getHeight())==CL_SUCCESS);
+            
+            // Pass perspective-correct texture coordinates (u/z, v/z)
+            assert(texturedDrawingKernel->setArg(10, ta.u * w1)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(11, ta.v * w1)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(12, tb.u * w2)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(13, tb.v * w2)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(14, tc.u * w3)==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(15, tc.v * w3)==CL_SUCCESS);
+           
+            assert(texturedDrawingKernel->setArg(16, (boxLeft))==CL_SUCCESS);
+            assert(texturedDrawingKernel->setArg(17, (boxTop))==CL_SUCCESS);
+            
+            // Barycentric coordinate calculation parameters
+            float inv = 1.0f/(x1*y2 - x1*y3 - y1*x2 + y1*x3 + x2*y3 - y2*x3);
+            assert(texturedDrawingKernel->setArg(18, (y3 - y1)*inv)==CL_SUCCESS);  // dx1
+            assert(texturedDrawingKernel->setArg(19, (y1 - y2)*inv)==CL_SUCCESS);  // dx2
+            assert(texturedDrawingKernel->setArg(20, (x1 - x3)*inv)==CL_SUCCESS);  // dy1
+            assert(texturedDrawingKernel->setArg(21, (x2 - x1)*inv)==CL_SUCCESS);  // dy2
+            assert(texturedDrawingKernel->setArg(22, (-x1*y3 + y1*x3)*inv)==CL_SUCCESS);  // lambda1
+            assert(texturedDrawingKernel->setArg(23, (x1*y2 - y1*x2)*inv)==CL_SUCCESS);   // lambda2
+            
+            size_t global_work_size_x = (boxRight - boxLeft + 2)/2;
+            size_t global_work_size_y = (boxBottom - boxTop + 2)/2;
+            cl::NDRange global_work_size(global_work_size_x, global_work_size_y);
+            assert(getGPU().getQueue().enqueueNDRangeKernel(*texturedDrawingKernel, cl::NullRange, global_work_size, cl::NullRange)==CL_SUCCESS);
+
+            isFirstDraw = false;
+        }
 };
 
 DepthBuffer::DepthBuffer(int scr_w, int scr_h, int scr_y){
@@ -288,6 +397,17 @@ uint32_t* DepthBuffer::finishFrame() {
 
 void DepthBuffer::enqueueDrawTriangle(const vec &a, const vec &b, const vec &c, int clr){
     pimpl->enqueueDrawTriangle(a,b,c,clr);
+}
+
+void DepthBuffer::enqueueDrawTexturedTriangle(const vec &a, const vec &b, const vec &c, 
+                                            const TexCoord &ta, const TexCoord &tb, const TexCoord &tc,
+                                            size_t textureID) {
+    // Look up the texture using the now-private getTexture method
+    Texture* texture = getGPU().getTexture(textureID);
+    if (texture) {
+        pimpl->_enqueueDrawTexturedTriangle(a, b, c, ta, tb, tc, *texture);
+    }
+    // Silently fail if texture ID is invalid
 }
 
 void DepthBuffer::clear(){

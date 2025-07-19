@@ -1,12 +1,13 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
-#include <vector>
-#include <cstdlib>   
 #include <ctime>    
-#include "shapes/tower.hpp"      
+#include <string>
+#include <iomanip>
+#include <sstream>
+#include "shapes/shape3d.hpp"
 #include "../include/rendering.hpp" 
-#include "../include/util.hpp"      
+#include "../include/util.hpp"
 
 void drawText(const std::string &what, int x, int y, SDL_Renderer* renderer){
     static TTF_Font* font = nullptr;
@@ -42,6 +43,46 @@ void drawText(const std::string &what, int x, int y, SDL_Renderer* renderer){
     SDL_DestroyTexture(texture);
 }
 
+void saveScreenshot(SDL_Renderer* renderer, int width, int height) {
+    // Create a surface with the same dimensions as the renderer
+    SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, 32, 
+        0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    
+    if (!surface) {
+        std::cerr << "Failed to create surface for screenshot: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    // Read pixels from the renderer
+    if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, 
+                            surface->pixels, surface->pitch) != 0) {
+        std::cerr << "Failed to read pixels: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(surface);
+        return;
+    }
+
+    // Generate a unique filename using a timestamp
+    time_t t = time(nullptr);
+    tm* now = localtime(&t);
+    std::stringstream ss;
+    ss << "screenshot_" << (now->tm_year + 1900) << '-' 
+       << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << '-'
+       << std::setfill('0') << std::setw(2) << now->tm_mday << '_'
+       << std::setfill('0') << std::setw(2) << now->tm_hour
+       << std::setfill('0') << std::setw(2) << now->tm_min
+       << std::setfill('0') << std::setw(2) << now->tm_sec << ".bmp";
+    std::string filename = ss.str();
+
+    // Save as BMP
+    if (SDL_SaveBMP(surface, filename.c_str()) != 0) {
+        std::cerr << "Failed to save screenshot: " << SDL_GetError() << std::endl;
+    } else {
+        std::cout << "Screenshot saved: " << filename << std::endl;
+    }
+
+    SDL_FreeSurface(surface);
+}
+
 int main(){
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -54,9 +95,9 @@ int main(){
         return -1;
     }
 
-    int screenWidth = 1280;
-    int screenHeight = 720;
-    SDL_Window* window = SDL_CreateWindow("Demo Towers",
+    int screenWidth = 2560;
+    int screenHeight = 1440;
+    SDL_Window* window = SDL_CreateWindow("Demo Minecraft",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         screenWidth, screenHeight,
         SDL_WINDOW_SHOWN
@@ -83,22 +124,24 @@ int main(){
     // Initialize GPU and DepthBuffer
     initGPU();
     DepthBuffer depthBuffer(screenWidth, screenHeight, 1000);
+    
+    // Load texture from PNG file and get its ID
+    std::optional<size_t> textureIDOpt = Texture::loadFromFile("../demo/textures/minecraft_dirt.png");
+    if (!textureIDOpt) {
+        std::cerr << "Failed to load texture, exiting." << std::endl;
+        // In a real app, you might fall back to a default texture
+        return -1;
+    }
+    size_t dirtTextureID = *textureIDOpt;
 
-    // Create multiple random towers
-    srand((unsigned)time(nullptr));
-
-    const int nTowers = 5;
-
-    std::vector<Tower> towers;
-    towers.reserve(nTowers);
-
-    for (int i = 0; i < nTowers; ++i) {
-        float x = float((rand() % 16001) - 8000);
-        float z = float((rand() % 16001) + 8000);
-        vec towerPos = {x, -100.0f, z};
-
-        Tower t(275.0f, 450.0f + float(rand()%551), 300.0f, 300.0f, 0.01f, towerPos);
-        towers.push_back(t);
+    // Create a Minecraft dirt block for testing
+    Shape3D dirtBlock = createMinecraftDirtBlock(800.0f);
+    dirtBlock.textureID = dirtTextureID;
+    
+    // Position the dirt block
+    vec cubePos = {0, 400, 500};
+    for (auto &v : dirtBlock.vertices) {
+        v = v + cubePos;
     }
 
     // Camera
@@ -113,7 +156,7 @@ int main(){
     SDL_Event e;
 
     // Frame timing
-    const int FPS = 60;
+    const int FPS = 120;
     const int frameDelay = 1000 / FPS;
     Uint32 frameStart;
     int frameTime;
@@ -129,6 +172,11 @@ int main(){
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            }
+            else if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_p) {
+                    saveScreenshot(renderer, screenWidth, screenHeight);
+                }
             }
             else if (e.type == SDL_MOUSEMOTION) {
                 cameraYaw   += e.motion.xrel * mouseSens;
@@ -159,14 +207,17 @@ int main(){
         if (keys[SDL_SCANCODE_SPACE]) cameraPos.y += moveSpeed;
         if (keys[SDL_SCANCODE_C])     cameraPos.y -= moveSpeed;
 
+        for (auto &v : dirtBlock.vertices) {
+            v = rotY(v, {0,400,500}, 0.025f);
+            v = rotX(v, {0,400,500}, 0.025f);
+        }
+
         SDL_RenderClear(renderer);
 
         depthBuffer.clear();     
 
-        for (auto &tower : towers) {
-            tower.update();
-            tower.draw(depthBuffer, cameraPos, cameraYaw, cameraPitch);
-        }
+        // Draw the textured cube
+        drawTexturedShape(depthBuffer, dirtBlock, cameraPos, cameraYaw, cameraPitch);
 
         Uint32* colorBuffer = depthBuffer.finishFrame();
 
@@ -176,10 +227,9 @@ int main(){
         drawText("Move with WASD", 100,100,renderer);
         drawText("Move up/down with SPACE / C", 100,150,renderer);
         drawText("Look around with mouse", 100,200,renderer);
+        drawText("Press P to take a screenshot", 100,250,renderer);
 
         SDL_RenderPresent(renderer);
-
-        
 
         // Cap framerate
         frameTime = SDL_GetTicks() - frameStart;
@@ -193,7 +243,7 @@ int main(){
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    deleteGPU();
+    deleteGPU(); // This will now also delete all textures
 
     return 0;
 }

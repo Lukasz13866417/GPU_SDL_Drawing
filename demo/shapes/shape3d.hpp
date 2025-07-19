@@ -13,6 +13,8 @@ struct Shape3D {
     std::vector<vec>  vertices;    
     std::vector<Face> faces;       
     std::vector<int>  faceColors;  
+    std::vector<TexCoord> texCoords; // texture coordinates for each vertex
+    size_t textureID; // ID of the texture to use
     int color; // base color
 };
 
@@ -29,5 +31,16 @@ void drawShape(
     float cameraYaw,
     float cameraPitch
 );
+
+// Function to draw a textured Shape3D
+void drawTexturedShape(
+    DepthBuffer& depthBuffer,
+    const Shape3D& shape,
+    const vec& cameraPos,
+    float cameraYaw,
+    float cameraPitch
+);
+
+Shape3D createMinecraftDirtBlock(float size);
 
 #endif // SHAPE3D_HPP
