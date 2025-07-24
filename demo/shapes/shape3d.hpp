@@ -2,8 +2,10 @@
 #define SHAPE3D_HPP
 
 #include <vector>
+#include <optional>
 #include "../include/util.hpp"    
-#include "../include/rendering.hpp" 
+#include "../include/texture.hpp" // Include texture.hpp directly
+#include "../include/rendering.hpp" // Include for Renderer 
 
 struct Face {
     int v0, v1, v2;
@@ -14,7 +16,7 @@ struct Shape3D {
     std::vector<Face> faces;       
     std::vector<int>  faceColors;  
     std::vector<TexCoord> texCoords; // texture coordinates for each vertex
-    size_t textureID; // ID of the texture to use
+    std::optional<Texture> texture; // Optional texture to use
     int color; // base color
 };
 
@@ -23,22 +25,16 @@ Shape3D createPyramid(int N, float radius, float height, int color);
 Shape3D createPrism(int N, float radius, float height, int color);
 Shape3D createCuboid(float Lx, float Ly, float H, int color);
 
-// Function to draw a Shape3D using your DepthBuffer and camera transforms.
+// Function to draw a Shape3D using the Renderer's camera
 void drawShape(
-    DepthBuffer& depthBuffer,
-    const Shape3D& shape,
-    const vec& cameraPos,
-    float cameraYaw,
-    float cameraPitch
+    Renderer& renderer,
+    const Shape3D& shape
 );
 
-// Function to draw a textured Shape3D
+// Function to draw a textured Shape3D using the Renderer's camera
 void drawTexturedShape(
-    DepthBuffer& depthBuffer,
-    const Shape3D& shape,
-    const vec& cameraPos,
-    float cameraYaw,
-    float cameraPitch
+    Renderer& renderer,
+    const Shape3D& shape
 );
 
 Shape3D createMinecraftDirtBlock(float size);

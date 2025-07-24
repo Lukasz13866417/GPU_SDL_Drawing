@@ -1,39 +1,58 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
-#include <CL/opencl.hpp>
-#include <memory>
+#include <vector>
 #include <optional>
 #include <string>
+#include <span>
+#include "buffer.hpp"
 
-#include "util.hpp"
 
-class _GPU; // Forward declaration
 
-class Texture{
-    friend class _GPU; // Allow _GPU to access private constructor
+class Texture {
     private:
         int width, height;
-        std::shared_ptr<cl::Buffer> textureBuffer;
-        
-        // Constructor is private to enforce creation via factory in GPU class
-        Texture(int w, int h, const uint32_t* data);
+    // Use ConstBuffer for textures - immutable GPU-only data
+    lr::ConstBuffer<uint32_t> buffer;
 
-    public:
-        ~Texture();
+public:
+    // Constructor to create texture with given dimensions and data
+    Texture(int w, int h, const std::vector<uint32_t>& data);
+    
+    // Constructor from span for more efficient initialization
+    Texture(int w, int h, std::span<const uint32_t> data);
+    
+    
+    // Copy semantics: 
+    // Note: Copying a Texture creates a shared reference to the same GPU buffer memory.
+    // This is different from creating a new buffer with copied data.
+    // The underlying cl::Buffer is a handle/reference, so multiple Texture objects
+    // can safely reference the same GPU memory. The OpenCL buffer memory is managed
+    // by OpenCL's reference counting system.
+    //
+    // If you need independent GPU buffers with the same data, create a new Texture
+    // by reading back the data and creating a new instance.
+    Texture(const Texture& other) = default;
+    Texture& operator=(const Texture& other) = default;
+    
+    // Move semantics
+    Texture(Texture&& other) noexcept = default;
+    Texture& operator=(Texture&& other) noexcept = default;
+    
+    ~Texture() = default;
         
-        // Textures are non-copyable and non-movable to enforce single ownership by GPUContext
-        Texture(const Texture& other) = delete;
-        Texture& operator=(const Texture& other) = delete;
-        Texture(Texture&& other) noexcept = delete;
-        Texture& operator=(Texture&& other) noexcept = delete;
-        
-        int getWidth() const;
-        int getHeight() const;
-        cl::Buffer& getBuffer();
-        
-        // Static factory method returns an ID instead of an object
-        static std::optional<size_t> loadFromFile(const std::string& filename);
+    // Accessors
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+    size_t getPixelCount() const { return width * height; }
+    
+    // Get the underlying OpenCL buffer for kernel usage
+    const cl::Buffer& getCLBuffer() const { return buffer.getCLBuffer(); }
+    
+
+
+    // Static factory method to load texture from file
+    static std::optional<Texture> loadFromFile(const std::string& filename);
 };
 
 struct TexCoord {

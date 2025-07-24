@@ -6,6 +6,8 @@
 #include <CL/opencl.hpp>
 #include <SDL2/SDL.h>
 
+// Ensure no padding in vec struct for OpenCL compatibility
+#pragma pack(push, 1)
 struct vec {
     float x, y, z;
 
@@ -41,6 +43,10 @@ struct vec {
     vec normalized() const;
     friend std::ostream& operator<<(std::ostream& os, const vec& v);
 };
+#pragma pack(pop)
+
+// Ensure vec is exactly 12 bytes (3 floats)
+static_assert(sizeof(vec) == 12, "vec must be exactly 12 bytes (3 floats) with no padding");
 
 vec operator^(const vec& v1, const vec& v2);
 float operator*(const vec& v1, const vec& v2) ;

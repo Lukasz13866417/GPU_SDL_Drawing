@@ -1,8 +1,5 @@
-// Main OpenCL script - now loads from multiple files combined in C++
-// This file contains the concatenated content of common.cl + rasterization.cl + binning.cl
-
-// Content will be assembled by C++ code - this file serves as a placeholder
-// for backwards compatibility during the transition
+// Triangle rasterization kernels
+// This file contains the kernels for actually drawing triangles to the framebuffer
 
                                   // output buffers
 __kernel void draw(__global float* depthBuffer,__global int* colorArray, 
@@ -96,24 +93,6 @@ __kernel void draw(__global float* depthBuffer,__global int* colorArray,
             colorArray[index] = clr;
         }
     }    
-}
-
-__kernel void clear(__global float* depthBuffer,__global int* colorArray, uint screen_width) {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-    int index = y * screen_width + x;
-    depthBuffer[index] = -1000000000000.0f;
-    colorArray[index] = 255<<24; //  black
-}
-
-int sampleTexture(__global int* texture, int tex_width, int tex_height, float u, float v) {
-    // Convert to pixel coordinates
-    // UV coordinates are already guaranteed to be in [0,1] from barycentric interpolation
-    int px = (int)(u * (tex_width - 1));
-    int py = (int)(v * (tex_height - 1));
-    
-    // Sample texture
-    return texture[py * tex_width + px];
 }
 
 __kernel void drawTextured(__global float* depthBuffer, __global int* colorArray, 
@@ -459,4 +438,4 @@ __kernel void drawTexturedIndexed(__global float* depthBuffer, __global int* col
             }
         }
     }
-}
+} 

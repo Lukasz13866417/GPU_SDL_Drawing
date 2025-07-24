@@ -4,19 +4,22 @@
 #include <optional>
 #include <string>
 #include "../include/util.hpp"
+#include "../include/buffer.hpp"
+#include "../include/camera.hpp"
 #include <CL/opencl.hpp>
 #include <SDL2/SDL.h>
 
-#include "texture.hpp" // Include the new texture header
+// Forward declarations
+class Texture;
+struct TexCoord;
 
 class _GPU;
-class DepthBuffer; // Forward-declaration for friendship
+class Renderer; // Forward-declaration for friendship
 
 class GPU{
-    friend class DepthBuffer;
+    friend class Renderer;
     private:
         _GPU* pimpl;
-        Texture* getTexture(size_t id);
     public:
         GPU();
         ~GPU();
@@ -25,30 +28,39 @@ class GPU{
         cl::Platform& getPlatform();
         cl::CommandQueue& getQueue();
         cl::Context& getContext();
-        
-        // Texture management
-        size_t createTexture(int width, int height, const uint32_t* data);
 };
-
 
 void initGPU();
 GPU& getGPU();
 void deleteGPU();
 
-class _DepthBuffer;
+class _Renderer;
 
-class DepthBuffer{
+class Renderer{
     private:
-    _DepthBuffer* pimpl;       
+    _Renderer* pimpl;       
     public:
-        DepthBuffer(int scr_s, int scr_h, int scr_z);
-        ~DepthBuffer();
+        Renderer(int scr_s, int scr_h, int scr_z);
+        ~Renderer();
         uint32_t *finishFrame();
-        void enqueueDrawTriangle(const vec &a,const vec &b,const vec &c, int clr);
-        void enqueueDrawTexturedTriangle(const vec &a, const vec &b, const vec &c, 
-                                       const TexCoord &ta, const TexCoord &tb, const TexCoord &tc,
-                                       size_t textureID);
+        
+        // Modern binning-based rendering methods only
+        
         void clear();
+        
+        // Binning-based rendering methods - collect triangles and render tiles efficiently
+        void startNewFrame();
+        void submitTriangleForBinning(const lr::BaseBuffer<vec>& vertexBuffer, int v0_idx, int v1_idx, int v2_idx, int color);
+            void submitTexturedTriangleForBinning(const lr::BaseBuffer<vec>& vertexBuffer, int v0_idx, int v1_idx, int v2_idx,
+                                         const TexCoord& ta, const TexCoord& tb, const TexCoord& tc, const Texture& texture);
+    void executeBinningPass();
+    void executeFinishFrameTileBased();  // Render using tile-based approach after binning
+    int getBinnedTriangleCount() const;
+    
+    // Camera management
+    void setCamera(const Camera& camera);
+    Camera& getCamera();
+    const Camera& getCamera() const;
 };
 
 #endif // GPU_HPP

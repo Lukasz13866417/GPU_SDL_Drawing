@@ -1,5 +1,5 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 300
-#include "util.hpp"
+#include "../include/util.hpp"
 #include <ostream>
 #include <iostream>
 #include<CL/opencl.hpp>

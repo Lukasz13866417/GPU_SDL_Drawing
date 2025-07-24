@@ -42,14 +42,11 @@ struct Tower {
         }*/
     }
 
-    void draw(DepthBuffer& depthBuffer,
-              const vec& cameraPos,
-              float cameraYaw,
-              float cameraPitch)
+    void draw(Renderer& renderer)
     {
-        drawShape(depthBuffer, basePrism, cameraPos, cameraYaw, cameraPitch);
-        drawShape(depthBuffer, hexPrism,   cameraPos, cameraYaw, cameraPitch);
-        drawShape(depthBuffer, hexPyramid, cameraPos, cameraYaw, cameraPitch);
+        drawShape(renderer, basePrism);
+        drawShape(renderer, hexPrism);
+        drawShape(renderer, hexPyramid);
     }
 };
 

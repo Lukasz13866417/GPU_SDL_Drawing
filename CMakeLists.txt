@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(GPU_SDL_Drawing LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
@@ -16,6 +19,8 @@ add_executable(demo_minecraft
     src/rendering2.cpp
     src/texture.cpp
     src/util.cpp
+    src/log.cpp
+    src/camera.cpp
 )
 
 add_executable(demo_towers
@@ -24,6 +29,35 @@ add_executable(demo_towers
     src/rendering2.cpp
     src/texture.cpp
     src/util.cpp
+    src/log.cpp
+    src/camera.cpp
+)
+
+add_executable(test_buffers
+    demo/test_buffers.cpp
+    src/rendering2.cpp
+    src/texture.cpp
+    src/util.cpp
+    src/log.cpp
+    src/camera.cpp
+)
+
+add_executable(vertex_buffer_demo
+    demo/vertex_buffer_demo.cpp
+    src/rendering2.cpp
+    src/texture.cpp
+    src/util.cpp
+    src/log.cpp
+    src/camera.cpp
+)
+
+add_executable(binning_demo
+    demo/binning_demo.cpp
+    src/rendering2.cpp
+    src/texture.cpp
+    src/util.cpp
+    src/log.cpp
+    src/camera.cpp
 )
 
 
@@ -35,6 +69,18 @@ target_include_directories(demo_minecraft PRIVATE
 target_include_directories(demo_towers PRIVATE 
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/demo/shapes"
+)
+
+target_include_directories(test_buffers PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_include_directories(vertex_buffer_demo PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_include_directories(binning_demo PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 
@@ -56,3 +102,17 @@ target_link_libraries(demo_towers PRIVATE ${SDL2_LIBRARIES})
 target_include_directories(demo_towers PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
 target_link_libraries(demo_towers PRIVATE ${SDL2_ttf_LIBRARIES})
 target_link_libraries(demo_towers PRIVATE SDL2_ttf::SDL2_ttf)
+
+target_include_directories(test_buffers PRIVATE ${OpenCL_INCLUDE_DIRS})
+target_link_libraries(test_buffers PRIVATE ${OpenCL_LIBRARIES})
+
+target_include_directories(vertex_buffer_demo PRIVATE ${OpenCL_INCLUDE_DIRS})
+target_link_libraries(vertex_buffer_demo PRIVATE ${OpenCL_LIBRARIES})
+target_include_directories(vertex_buffer_demo PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(vertex_buffer_demo PRIVATE ${SDL2_LIBRARIES})
+target_include_directories(vertex_buffer_demo PRIVATE ${SDL2_ttf_INCLUDE_DIRS})
+target_link_libraries(vertex_buffer_demo PRIVATE ${SDL2_ttf_LIBRARIES})
+target_link_libraries(vertex_buffer_demo PRIVATE SDL2_ttf::SDL2_ttf)
+
+target_include_directories(binning_demo PRIVATE ${OpenCL_INCLUDE_DIRS})
+target_link_libraries(binning_demo PRIVATE ${OpenCL_LIBRARIES})

@@ -116,16 +116,16 @@ int main(){
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_Texture* texture = SDL_CreateTexture(renderer,
+    SDL_Renderer* sdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Texture* texture = SDL_CreateTexture(sdlRenderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
         screenWidth, screenHeight
     );
 
-    // Initialize GPU and DepthBuffer
+    // Initialize GPU and Renderer
     initGPU();
-    DepthBuffer depthBuffer(screenWidth, screenHeight, 1000);
+    Renderer renderer(screenWidth, screenHeight, 1000);
     
 
     // Create multiple random towers
@@ -145,10 +145,12 @@ int main(){
         towers.push_back(t);
     }
     
-    // Camera
-    vec  cameraPos   = {0, 400, -900};
-    float cameraYaw   = 0.0f;
-    float cameraPitch = 0.0f;
+    // Set up camera
+    Camera& camera = renderer.getCamera();
+    camera.setPosition(0, 400, -900);
+    camera.setYawDegrees(0);
+    camera.setPitchDegrees(0);
+    camera.setRollDegrees(0);
 
     float moveSpeed = 60.0f;
     float mouseSens = 0.001f;
@@ -176,17 +178,11 @@ int main(){
             }
             else if (e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_p) {
-                    saveScreenshot(renderer, screenWidth, screenHeight);
+                    saveScreenshot(sdlRenderer, screenWidth, screenHeight);
                 }
             }
             else if (e.type == SDL_MOUSEMOTION) {
-                cameraYaw   += e.motion.xrel * mouseSens;
-                cameraPitch += e.motion.yrel * mouseSens;
-
-                // clamp pitch
-                const float maxPitch = 1.57f;
-                if (cameraPitch >  maxPitch) cameraPitch =  maxPitch;
-                if (cameraPitch < -maxPitch) cameraPitch = -maxPitch;
+                camera.rotate(e.motion.xrel * mouseSens, e.motion.yrel * mouseSens, 0);
             }
         }
 
@@ -196,38 +192,39 @@ int main(){
             quit = true;
         }
 
-        float cy = cos(cameraYaw);
-        float sy = sin(cameraYaw);
-        vec forward = { sy, 0.0f, cy };
-        vec right   = { cy, 0.0f, -sy };
+        if (keys[SDL_SCANCODE_W]) camera.moveForward(moveSpeed);
+        if (keys[SDL_SCANCODE_S]) camera.moveForward(-moveSpeed);
+        if (keys[SDL_SCANCODE_D]) camera.moveRight(moveSpeed);
+        if (keys[SDL_SCANCODE_A]) camera.moveRight(-moveSpeed);
+        if (keys[SDL_SCANCODE_SPACE]) camera.moveUp(moveSpeed);
+        if (keys[SDL_SCANCODE_C]) camera.moveUp(-moveSpeed);
 
-        if (keys[SDL_SCANCODE_W]) cameraPos = cameraPos + forward * moveSpeed;
-        if (keys[SDL_SCANCODE_S]) cameraPos = cameraPos - forward * moveSpeed;
-        if (keys[SDL_SCANCODE_D]) cameraPos = cameraPos + right   * moveSpeed;
-        if (keys[SDL_SCANCODE_A]) cameraPos = cameraPos - right   * moveSpeed;
-        if (keys[SDL_SCANCODE_SPACE]) cameraPos.y += moveSpeed;
-        if (keys[SDL_SCANCODE_C])     cameraPos.y -= moveSpeed;
+        SDL_RenderClear(sdlRenderer);
 
-        SDL_RenderClear(renderer);
+        // Start new frame for binning system
+        renderer.startNewFrame();
+        renderer.clear();     
 
-        depthBuffer.clear();     
-
+        // Draw all towers (submits to binning)
         for (auto &tower : towers) {
             tower.update();
-            tower.draw(depthBuffer, cameraPos, cameraYaw, cameraPitch);
+            tower.draw(renderer);
         }
         
-        Uint32* colorBuffer = depthBuffer.finishFrame();
+        // Execute binning pass and tile-based rendering
+        renderer.executeBinningPass();
+        renderer.executeFinishFrameTileBased();
+        Uint32* colorBuffer = renderer.finishFrame();
 
         SDL_UpdateTexture(texture, NULL, colorBuffer, screenWidth * sizeof(Uint32));
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderCopy(sdlRenderer, texture, NULL, NULL);
 
-        drawText("Move with WASD", 100,100,renderer);
-        drawText("Move up/down with SPACE / C", 100,150,renderer);
-        drawText("Look around with mouse", 100,200,renderer);
-        drawText("Press P to take a screenshot", 100,250,renderer);
+        drawText("Move with WASD", 100,100,sdlRenderer);
+        drawText("Move up/down with SPACE / C", 100,150,sdlRenderer);
+        drawText("Look around with mouse", 100,200,sdlRenderer);
+        drawText("Press P to take a screenshot", 100,250,sdlRenderer);
 
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(sdlRenderer);
 
         // Cap framerate
         frameTime = SDL_GetTicks() - frameStart;
@@ -238,7 +235,7 @@ int main(){
 
     // Cleanup
     SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
+    SDL_DestroyRenderer(sdlRenderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     deleteGPU(); // This will now also delete all textures

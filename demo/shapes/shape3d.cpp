@@ -19,70 +19,55 @@ int makeColorDarker(int baseColor)
 
 
 void drawShape(
-    DepthBuffer& depthBuffer,
-    const Shape3D& shape,
-    const vec& cameraPos,
-    float cameraYaw,
-    float cameraPitch)
+    Renderer& renderer,
+    const Shape3D& shape)
 {
+    // Apply camera transformations to all vertices
+    std::vector<vec> transformedVertices;
+    transformedVertices.reserve(shape.vertices.size());
+    
+    const Camera& camera = renderer.getCamera();
+    for (const vec& vertex : shape.vertices) {
+        transformedVertices.push_back(camera.transformVertex(vertex));
+    }
+    
+    // Create vertex buffer from camera-transformed vertices
+    lr::AllPurposeBuffer<vec> vertexBuffer(transformedVertices.size(), transformedVertices);
+    
+    // Submit each face triangle for binning
     for (size_t i = 0; i < shape.faces.size(); i++) {
         const Face& face = shape.faces[i];
-
-        // World coords
-        vec v0World = shape.vertices[face.v0];
-        vec v1World = shape.vertices[face.v1];
-        vec v2World = shape.vertices[face.v2];
-
-        // Translate so camera is at origin
-        v0World = v0World - cameraPos;
-        v1World = v1World - cameraPos;
-        v2World = v2World - cameraPos;
-
-        // Rotate around Y by -cameraYaw
-        v0World = rotY(v0World, {0,0,0}, -cameraYaw);
-        v1World = rotY(v1World, {0,0,0}, -cameraYaw);
-        v2World = rotY(v2World, {0,0,0}, -cameraYaw);
-
-        // Rotate around X by -cameraPitch
-        v0World = rotX(v0World, {0,0,0}, -cameraPitch);
-        v1World = rotX(v1World, {0,0,0}, -cameraPitch);
-        v2World = rotX(v2World, {0,0,0}, -cameraPitch);
-
-        // Draw
         int faceColor = shape.faceColors[i];
-        depthBuffer.enqueueDrawTriangle(v0World, v1World, v2World, faceColor);
+        
+        // Submit triangle for binning using vertex buffer and indices
+        renderer.submitTriangleForBinning(vertexBuffer, face.v0, face.v1, face.v2, faceColor);
     }
 }
 
 void drawTexturedShape(
-    DepthBuffer& depthBuffer,
-    const Shape3D& shape,
-    const vec& cameraPos,
-    float cameraYaw,
-    float cameraPitch)
+    Renderer& renderer,
+    const Shape3D& shape)
 {
+    // Only proceed if texture is available
+    if (!shape.texture.has_value()) {
+        return;
+    }
+    
+    // Apply camera transformations to all vertices
+    std::vector<vec> transformedVertices;
+    transformedVertices.reserve(shape.vertices.size());
+    
+    const Camera& camera = renderer.getCamera();
+    for (const vec& vertex : shape.vertices) {
+        transformedVertices.push_back(camera.transformVertex(vertex));
+    }
+    
+    // Create vertex buffer from camera-transformed vertices
+    lr::AllPurposeBuffer<vec> vertexBuffer(transformedVertices.size(), transformedVertices);
+    
+    // Submit each face triangle for binning
     for (size_t i = 0; i < shape.faces.size(); i++) {
         const Face& face = shape.faces[i];
-
-        // World coords
-        vec v0World = shape.vertices[face.v0];
-        vec v1World = shape.vertices[face.v1];
-        vec v2World = shape.vertices[face.v2];
-
-        // Translate so camera is at origin
-        v0World = v0World - cameraPos;
-        v1World = v1World - cameraPos;
-        v2World = v2World - cameraPos;
-
-        // Rotate around Y by -cameraYaw
-        v0World = rotY(v0World, {0,0,0}, -cameraYaw);
-        v1World = rotY(v1World, {0,0,0}, -cameraYaw);
-        v2World = rotY(v2World, {0,0,0}, -cameraYaw);
-
-        // Rotate around X by -cameraPitch
-        v0World = rotX(v0World, {0,0,0}, -cameraPitch);
-        v1World = rotX(v1World, {0,0,0}, -cameraPitch);
-        v2World = rotX(v2World, {0,0,0}, -cameraPitch);
 
         // Get texture coordinates for this face
         TexCoord tc0, tc1, tc2;
@@ -97,8 +82,9 @@ void drawTexturedShape(
             tc2 = TexCoord(0.5f, 1.0f);
         }
 
-        // Draw textured triangle
-        depthBuffer.enqueueDrawTexturedTriangle(v0World, v1World, v2World, tc0, tc1, tc2, shape.textureID);
+        // Submit textured triangle for binning using vertex buffer and indices
+        renderer.submitTexturedTriangleForBinning(vertexBuffer, face.v0, face.v1, face.v2, 
+                                                tc0, tc1, tc2, *shape.texture);
     }
 }
 
@@ -243,7 +229,7 @@ Shape3D createMinecraftDirtBlock(float size)
     vec v_nnp = {-s, -s, +s}; vec v_nnn = {-s, -s, -s};
 
     // Define texture coordinate sets for different faces from a 2x2 atlas
-    TexCoord tc_top_00 = {0.5f,0.333f}, tc_top_01 = {0.75f,0.333f}, tc_top_10 = {0.5f, 0.666f}, tc_top_11 = {0.75f,0.666f};
+    TexCoord tc_top_00 = {0.51f,0.34f}, tc_top_01 = {0.74f,0.34f}, tc_top_10 = {0.51f, 0.65f}, tc_top_11 = {0.74f,0.65f};
     TexCoord tc_side_00 = {0.25f, 0.33f}, tc_side_01 = {0.25f, 0.0f}, tc_side_10 = {0.0f, 0.333f}, tc_side_11 = {0.0f, 0.0f};
     TexCoord tc_bottom_00 = {0.0f,0.333f}, tc_bottom_01 = {0.25f,0.333f}, tc_bottom_10 = {0.0f, 0.666f}, tc_bottom_11 = {0.25f,0.666f};
 
